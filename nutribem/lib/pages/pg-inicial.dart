@@ -1,419 +1,521 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../database/dabase_helper.dart';
+import '../models/refeicao.dart';
+import '../models/resumo_nutricional.dart';
+import '../pages/adicionar_refeicao.dart';
 
-void main() {
-  runApp(const NutritionApp());
-}
-
-class NutritionApp extends StatelessWidget {
-  const NutritionApp({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2D5A27)),
-      ),
-      home: const NutritionHomeScreen(),
-    );
-  }
+  State<HomePage> createState() => _HomePageState();
 }
 
-class NutritionHomeScreen extends StatelessWidget {
-  const NutritionHomeScreen({super.key});
+class _HomePageState extends State<HomePage> {
+  final DatabaseHelper _db = DatabaseHelper.instance;
 
+  DateTime _dataSelecionada = DateTime.now();
+  ResumoNutricional? _resumo;
+  List<Refeicao> _refeicoes = [];
+  bool _carregando = true;
+
+  // Metas diárias (podem vir de configurações futuramente)
+  static const double _metaCalorias = 2000;
+  static const double _metaCarbs = 250;
+  static const double _metaProteina = 120;
+  static const double _metaGordura = 65;
+  static const double _metaAgua = 2.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarDados();
+  }
+
+  // ── Busca refeições e resumo do dia no banco ─────────────────────────────────
+  Future<void> _carregarDados() async {
+    setState(() => _carregando = true);
+    try {
+      final dataStr = DateFormat('yyyy-MM-dd').format(_dataSelecionada);
+      final refeicoes = await _db.getRefeicoesPorData(dataStr);
+      final resumo = await _db.getResumoNutricional(dataStr);
+      setState(() {
+        _refeicoes = refeicoes;
+        _resumo = resumo;
+        _carregando = false;
+      });
+    } catch (e) {
+      setState(() => _carregando = false);
+    }
+  }
+
+  // ── Abre DatePicker para trocar o dia visualizado ────────────────────────────
+  // DropdownButton / DatePicker: conforme anotação no mockup da home
+  Future<void> _selecionarData() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dataSelecionada,
+      firstDate: DateTime(2024),
+      lastDate: DateTime.now(),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(primary: Color(0xFF1B5E20)),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null && picked != _dataSelecionada) {
+      setState(() => _dataSelecionada = picked);
+      _carregarDados();
+    }
+  }
+
+  // ── Navega para AdicionarRefeicaoPage e recarrega ao voltar ─────────────────
+  Future<void> _adicionarRefeicao() async {
+    final resultado = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const AdicionarRefeicaoPage()),
+    );
+    // Se salvou com sucesso retorna true e recarrega os dados da home
+    if (resultado == true) _carregarDados();
+  }
+
+  // ── Navega para edição passando a refeição existente ────────────────────────
+  Future<void> _editarRefeicao(Refeicao refeicao) async {
+    final resultado = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AdicionarRefeicaoPage(refeicaoParaEditar: refeicao),
+      ),
+    );
+    if (resultado == true) _carregarDados();
+  }
+
+  // ── Confirma e exclui refeição ───────────────────────────────────────────────
+  Future<void> _excluirRefeicao(Refeicao refeicao) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Excluir refeição'),
+        content: Text('Deseja excluir "${refeicao.nome}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+    if (confirmar == true) {
+      await _db.deleteRefeicao(refeicao.id!);
+      _carregarDados();
+    }
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+  String get _dataFormatada {
+    final hoje = DateTime.now();
+    final h = DateTime(hoje.year, hoje.month, hoje.day);
+    final s = DateTime(_dataSelecionada.year, _dataSelecionada.month, _dataSelecionada.day);
+    if (s == h) return DateFormat("EEE, d MMM yyyy", 'pt_BR').format(_dataSelecionada);
+    if (s == h.subtract(const Duration(days: 1))) {
+      return 'Ontem, ${DateFormat("d MMM", 'pt_BR').format(_dataSelecionada)}';
+    }
+    return DateFormat("EEE, d MMM yyyy", 'pt_BR').format(_dataSelecionada);
+  }
+
+  double get _totalCalorias => _resumo?.totalCalorias ?? 0;
+  double get _totalCarbs    => _resumo?.totalCarbs    ?? 0;
+  double get _totalProteina => _resumo?.totalProteina ?? 0;
+  double get _totalGordura  => _resumo?.totalGordura  ?? 0;
+  double get _totalAgua     => _resumo?.totalAgua     ?? 0;
+  int    get _totalRefeicoes => _refeicoes.length;
+  double get _pontuacao => ((_totalCalorias / _metaCalorias) * 100).clamp(0, 100);
+
+  // ── BUILD ────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header Verde
-                const HeaderSection(),
-                
-                // Conteúdo Principal com Overlap
-                Transform.translate(
-                  offset: const Offset(0, -30),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Column(
-                      children: [
-                        // Card Resumo Nutricional
-                        const NutritionalSummaryCard(),
-                        const SizedBox(height: 16),
-                        
-                        // Cards de Macros
-                        const Row(
-                          children: [
-                            Expanded(child: MacroCard(label: 'Carbs', value: '168g', progress: 0.7, color: Colors.blue)),
-                            SizedBox(width: 12),
-                            Expanded(child: MacroCard(label: 'Proteína', value: '62g', progress: 0.5, color: Colors.orange)),
-                            SizedBox(width: 12),
-                            Expanded(child: MacroCard(label: 'Gordura', value: '44g', progress: 0.4, color: Colors.red)),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        
-                        // Estatísticas Rápidas
-                        const Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            StatItem(icon: Icons.star_outline, value: '82', label: 'Pontuação', iconColor: Colors.amber),
-                            StatItem(icon: Icons.restaurant_menu, value: '4', label: 'Refeições', iconColor: Colors.grey),
-                            StatItem(icon: Icons.water_drop_outlined, value: '1,4 L', label: 'Água', iconColor: Colors.blue),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-                        
-                        // Seção Refeições de Hoje
-                        const MealsHeader(),
-                        const SizedBox(height: 16),
-                        const MealListItem(
-                          icon: Icons.wb_sunny_outlined,
-                          title: 'Café da Manhã',
-                          subtitle: 'Aveia + Banana + Mel',
-                          calories: '380 kcal',
-                          time: '07:30',
-                        ),
-                        const MealListItem(
-                          icon: Icons.wb_cloudy_outlined,
-                          title: 'Almoço',
-                          subtitle: 'Frango grelhado + Arroz + Salada',
-                          calories: '620 kcal',
-                          time: '12:15',
-                        ),
-                        const MealListItem(
-                          icon: Icons.wb_twilight_outlined,
-                          title: 'Lanche',
-                          subtitle: 'Iogurte + Granola',
-                          calories: '210 kcal',
-                          time: '16:00',
-                        ),
-                        const SizedBox(height: 100), // Espaço para o botão
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          // Botão Adicionar Refeição
-          Positioned(
-            bottom: 20,
-            left: 20,
-            right: 20,
-            child: ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text(
-                'Adicionar Refeição',
-                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1B4332),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-              ),
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: const CustomBottomNavBar(),
-    );
-  }
-}
-
-class HeaderSection extends StatelessWidget {
-  const HeaderSection({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.only(top: 60, left: 24, right: 24, bottom: 60),
-      decoration: const BoxDecoration(
-        color: Color(0xFF2D5A27),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(0),
-          bottomRight: Radius.circular(0),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Como está sua\nalimentação hoje?',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              height: 1.2,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Text(
-              'Ter, 10 Jun 2025',
-              style: TextStyle(color: Colors.white, fontSize: 14),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class NutritionalSummaryCard extends StatelessWidget {
-  const NutritionalSummaryCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Resumo Nutricional',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          const Text(
-            'Meta diária: 2.000 kcal',
-            style: TextStyle(color: Colors.grey, fontSize: 12),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
+      backgroundColor: Colors.grey[100],
+      body: RefreshIndicator(
+        color: const Color(0xFF1B5E20),
+        onRefresh: _carregarDados,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
             children: [
-              const Text(
-                '1.340',
-                style: TextStyle(
-                  color: Color(0xFF4CAF50),
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
+              // Container: bloco verde do topo
+              _buildHeader(),
+              // Cards sobrepostos no container verde
+              Transform.translate(
+                offset: const Offset(0, -30),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: _carregando
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 40),
+                          child: Center(child: CircularProgressIndicator(color: Color(0xFF1B5E20))),
+                        )
+                      : Column(
+                          children: [
+                            // Card: Resumo Nutricional
+                            _buildResumoNutricional(),
+                            const SizedBox(height: 10),
+                            // Row: Macros (Carbs, Proteína, Gordura)
+                            _buildMacros(),
+                            const SizedBox(height: 15),
+                            // Row: Estatísticas (Pontuação, Refeições, Água)
+                            _buildEstatisticas(),
+                          ],
+                        ),
                 ),
               ),
-              const SizedBox(width: 8),
-              const Text(
-                'kcal',
-                style: TextStyle(color: Colors.grey, fontSize: 16),
+              // Seção de refeições do dia
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    _buildCabecalhoRefeicoes(),
+                    if (!_carregando && _refeicoes.isEmpty)
+                      _buildEstadoVazio()
+                    else
+                      ..._refeicoes.map((r) => _buildMealCard(r)),
+                    const SizedBox(height: 20),
+                    // ElevatedButton: Adicionar Refeição
+                    _buildBotaoAdicionar(),
+                    const SizedBox(height: 20),
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: const LinearProgressIndicator(
-              value: 0.67,
-              minHeight: 8,
-              backgroundColor: Color(0xFFEEEEEE),
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
-}
 
-class MacroCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final double progress;
-  final Color color;
-
-  const MacroCard({
-    super.key,
-    required this.label,
-    required this.value,
-    required this.progress,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  // ── Header verde ─────────────────────────────────────────────────────────────
+  Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 60, 20, 50),
+      decoration: const BoxDecoration(
+        color: Color(0xFF1B5E20),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-          const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 4,
-              backgroundColor: const Color(0xFFEEEEEE),
-              valueColor: AlwaysStoppedAnimation<Color>(color),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Text: título principal
+              const Text(
+                'Como está sua\nalimentação hoje?',
+                style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              // IconButton: pesquisa conforme anotação "iconbutton" no mockup
+              IconButton(
+                onPressed: () { /* TODO: tela de busca */ },
+                icon: const Icon(Icons.search, color: Colors.white, size: 26),
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.white24,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // DropdownButton de data — abre DatePicker ao tocar
+          // conforme anotação "DropdownButton" no mockup
+          GestureDetector(
+            onTap: _selecionarData,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(20)),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Text: data do dia selecionado
+                  Text(_dataFormatada, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                  const SizedBox(width: 4),
+                  // Icon: seta do dropdown
+                  const Icon(Icons.arrow_drop_down, color: Colors.white, size: 16),
+                ],
+              ),
             ),
           ),
         ],
       ),
     );
   }
-}
 
-class StatItem extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String label;
-  final Color iconColor;
-
-  const StatItem({
-    super.key,
-    required this.icon,
-    required this.value,
-    required this.label,
-    required this.iconColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, color: iconColor, size: 28),
-        const SizedBox(height: 4),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-      ],
-    );
-  }
-}
-
-class MealsHeader extends StatelessWidget {
-  const MealsHeader({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          'Refeições de Hoje',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        Text(
-          'Ver todas',
-          style: TextStyle(color: Color(0xFF4CAF50), fontWeight: FontWeight.w600),
-        ),
-      ],
-    );
-  }
-}
-
-class MealListItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String calories;
-  final String time;
-
-  const MealListItem({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.calories,
-    required this.time,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F8E9),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: const Color(0xFF2D5A27), size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+  // ── Card Resumo Nutricional ───────────────────────────────────────────────────
+  Widget _buildResumoNutricional() {
+    final prog = (_totalCalorias / _metaCalorias).clamp(0.0, 1.0);
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Text: "Resumo Nutricional"
+            const Text('Resumo Nutricional', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            // Text: meta diária
+            Text('Meta diária: ${NumberFormat('#,###', 'pt_BR').format(_metaCalorias.round())} kcal',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+            const SizedBox(height: 15),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    Text(
-                      calories,
-                      style: const TextStyle(color: Color(0xFF4CAF50), fontWeight: FontWeight.bold),
-                    ),
-                  ],
+                // Text: total de calorias (vem do banco)
+                Text(
+                  NumberFormat('#,###', 'pt_BR').format(_totalCalorias.round()),
+                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF4CAF50)),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                    Text(time, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                  ],
+                const SizedBox(width: 5),
+                const Text('kcal', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                const Spacer(),
+                Text(
+                  'Restam ${NumberFormat('#,###', 'pt_BR').format((_metaCalorias - _totalCalorias).clamp(0, _metaCalorias).round())} kcal',
+                  style: TextStyle(color: Colors.grey[500], fontSize: 11),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 10),
+            // LinearProgressIndicator: progresso do dia (vem do banco)
+            LinearProgressIndicator(
+              value: prog,
+              backgroundColor: const Color(0xFFE0E0E0),
+              color: prog >= 1.0 ? Colors.red : const Color(0xFF4CAF50),
+              minHeight: 8,
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Row de macros ─────────────────────────────────────────────────────────────
+  Widget _buildMacros() {
+    return Row(
+      children: [
+        Expanded(child: _buildMacroCard('Carbs',    '${_totalCarbs.round()}g',    Colors.blue,   (_totalCarbs    / _metaCarbs).clamp(0.0, 1.0))),
+        const SizedBox(width: 10),
+        Expanded(child: _buildMacroCard('Proteína', '${_totalProteina.round()}g', Colors.orange, (_totalProteina / _metaProteina).clamp(0.0, 1.0))),
+        const SizedBox(width: 10),
+        Expanded(child: _buildMacroCard('Gordura',  '${_totalGordura.round()}g',  Colors.red,    (_totalGordura  / _metaGordura).clamp(0.0, 1.0))),
+      ],
+    );
+  }
+
+  // ── Row de estatísticas ───────────────────────────────────────────────────────
+  Widget _buildEstatisticas() {
+    return Row(
+      children: [
+        Expanded(child: _buildStatCard('${_pontuacao.round()}',              'Pontuação', Icons.star,       Colors.amber)),
+        const SizedBox(width: 10),
+        Expanded(child: _buildStatCard('$_totalRefeicoes',                   'Refeições', Icons.restaurant, Colors.grey)),
+        const SizedBox(width: 10),
+        Expanded(child: _buildStatCard('${_totalAgua.toStringAsFixed(1)} L', 'Água',      Icons.water_drop, Colors.blue)),
+      ],
+    );
+  }
+
+  // ── Cabeçalho refeições ───────────────────────────────────────────────────────
+  Widget _buildCabecalhoRefeicoes() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // Text: "Refeições de Hoje"
+        const Text('Refeições de Hoje', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        // TextButton: "Ver todas"
+        TextButton(
+          onPressed: () { /* TODO: tela de lista completa */ },
+          child: const Text('Ver todas', style: TextStyle(color: Colors.green)),
+        ),
+      ],
+    );
+  }
+
+  // ── Estado vazio ──────────────────────────────────────────────────────────────
+  Widget _buildEstadoVazio() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 30),
+      child: Column(
+        children: [
+          Icon(Icons.restaurant_menu, size: 48, color: Colors.grey[300]),
+          const SizedBox(height: 12),
+          Text('Nenhuma refeição registrada', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+          const SizedBox(height: 4),
+          Text('Toque em "+ Adicionar Refeição" para começar', style: TextStyle(color: Colors.grey[400], fontSize: 12)),
         ],
       ),
     );
   }
-}
 
-class CustomBottomNavBar extends StatelessWidget {
-  const CustomBottomNavBar({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      selectedItemColor: const Color(0xFF2D5A27),
-      unselectedItemColor: Colors.grey,
-      currentIndex: 0,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.restaurant_outlined), label: 'Refeições'),
-        BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), label: 'Histórico'),
-        BottomNavigationBarItem(icon: Icon(Icons.bar_chart_outlined), label: 'Estatísticas'),
-        BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Configurações'),
-      ],
+  // ── ElevatedButton Adicionar ──────────────────────────────────────────────────
+  Widget _buildBotaoAdicionar() {
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: ElevatedButton(
+        onPressed: _adicionarRefeicao,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF1B5E20),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        ),
+        child: const Text('+ Adicionar Refeição', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+      ),
     );
+  }
+
+  // ── Card de macro ─────────────────────────────────────────────────────────────
+  Widget _buildMacroCard(String label, String value, Color color, double progress) {
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        child: Column(
+          children: [
+            Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+            Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            // LinearProgressIndicator: barra do macro (vem do banco)
+            LinearProgressIndicator(
+              value: progress,
+              backgroundColor: color.withOpacity(0.1),
+              color: color,
+              minHeight: 4,
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Card de estatística ───────────────────────────────────────────────────────
+  Widget _buildStatCard(String value, String label, IconData iconData, Color iconColor) {
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        child: Column(
+          children: [
+            // Icon: ícone da estatística
+            Icon(iconData, color: iconColor, size: 24),
+            const SizedBox(height: 8),
+            // Text: valor (vem do banco)
+            Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Card de refeição individual ───────────────────────────────────────────────
+  Widget _buildMealCard(Refeicao refeicao) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Dismissible(
+        key: Key('refeicao_${refeicao.id}'),
+        direction: DismissDirection.endToStart,
+        background: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 20),
+          decoration: BoxDecoration(color: Colors.red[400], borderRadius: BorderRadius.circular(15)),
+          child: const Icon(Icons.delete_outline, color: Colors.white),
+        ),
+        confirmDismiss: (_) async {
+          await _excluirRefeicao(refeicao);
+          return false;
+        },
+        child: Card(
+          elevation: 0,
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+            side: BorderSide(color: Colors.grey.withOpacity(0.1)),
+          ),
+          child: InkWell(
+            onTap: () => _editarRefeicao(refeicao),
+            borderRadius: BorderRadius.circular(15),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  // Container: fundo do ícone
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.green[50],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    // Icon: ícone do tipo de refeição (vem do banco)
+                    child: Icon(_iconePorTipo(refeicao.tipo), color: Colors.green[700], size: 24),
+                  ),
+                  const SizedBox(width: 15),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Text: nome da refeição (vem do banco)
+                        Text(refeicao.nome, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        // Text: quantidade/descrição (vem do banco)
+                        if (refeicao.descricao != null && refeicao.descricao!.isNotEmpty)
+                          Text(refeicao.descricao!, style: const TextStyle(color: Colors.grey, fontSize: 11),
+                              maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // Text: calorias (vem do banco)
+                      Text('${refeicao.calorias.round()} kcal',
+                          style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12)),
+                      // Text: horário (vem do banco)
+                      if (refeicao.horario != null)
+                        Text(refeicao.horario!, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Ícone por tipo de refeição ────────────────────────────────────────────────
+  IconData _iconePorTipo(String? tipo) {
+    switch (tipo?.toLowerCase()) {
+      case 'café da manhã': return Icons.wb_sunny_outlined;
+      case 'almoço':        return Icons.wb_cloudy_outlined;
+      case 'lanche':        return Icons.cookie_outlined;
+      case 'jantar':        return Icons.nightlight_outlined;
+      case 'ceia':          return Icons.bedtime_outlined;
+      default:              return Icons.restaurant_outlined;
+    }
   }
 }
