@@ -4,111 +4,109 @@ import '../models/refeicao.dart';
 import '../models/resumo_nutricional.dart';
 
 class DatabaseHelper {
-  static const _dbName = 'nutricao.db';
-  static const _dbVersion = 1;
-  static const _tabelaRefeicoes = 'refeicoes';
+  static final DatabaseHelper instance = DatabaseHelper._init();
+  static Database? _database;
 
-  DatabaseHelper._internal();
-  static final DatabaseHelper instance = DatabaseHelper._internal();
-
-  Database? _db;
+  DatabaseHelper._init();
 
   Future<Database> get database async {
-    _db ??= await _initDb();
-    return _db!;
+    if (_database != null) return _database!;
+    _database = await _initDB('nutribem.db');
+    return _database!;
   }
 
-  Future<Database> _initDb() async {
-    final caminho = join(await getDatabasesPath(), _dbName);
+  Future<Database> _initDB(String filePath) async {
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, filePath);
+
     return await openDatabase(
-      caminho,
-      version: _dbVersion,
-      onCreate: _onCreate,
+      path,
+      version: 1,
+      onCreate: _createDB,
     );
   }
 
-  Future<void> _onCreate(Database db, int version) async {
+  Future _createDB(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE $_tabelaRefeicoes (
-        id       INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome     TEXT    NOT NULL,
+      CREATE TABLE refeicoes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
         descricao TEXT,
-        tipo     TEXT,
-        calorias REAL    NOT NULL DEFAULT 0,
-        carbs    REAL    NOT NULL DEFAULT 0,
-        proteina REAL    NOT NULL DEFAULT 0,
-        gordura  REAL    NOT NULL DEFAULT 0,
-        agua     REAL    NOT NULL DEFAULT 0,
-        data     TEXT    NOT NULL,
-        horario  TEXT
+        tipo TEXT,
+        calorias REAL NOT NULL,
+        carbs REAL,
+        proteina REAL,
+        gordura REAL,
+        agua REAL,
+        data TEXT NOT NULL,
+        horario TEXT
       )
     ''');
   }
 
-  // ── CRUD ────────────────────────────────────────────────────────────────────
-
+  // MÉTODO DE INSERT
   Future<int> insertRefeicao(Refeicao refeicao) async {
-    final db = await database;
-    return await db.insert(_tabelaRefeicoes, refeicao.toMap());
+    final db = await instance.database;
+    return await db.insert('refeicoes', refeicao.toMap());
   }
 
+  // MÉTODO DE UPDATE (Necessário para a edição que criamos!)
   Future<int> updateRefeicao(Refeicao refeicao) async {
-    final db = await database;
+    final db = await instance.database;
     return await db.update(
-      _tabelaRefeicoes,
+      'refeicoes',
       refeicao.toMap(),
       where: 'id = ?',
       whereArgs: [refeicao.id],
     );
   }
 
+  // MÉTODO DE DELETE
   Future<int> deleteRefeicao(int id) async {
-    final db = await database;
+    final db = await instance.database;
     return await db.delete(
-      _tabelaRefeicoes,
+      'refeicoes',
       where: 'id = ?',
       whereArgs: [id],
     );
   }
 
-  // ── QUERIES ─────────────────────────────────────────────────────────────────
-
-  /// Refeições de um dia específico, ordenadas por horário
   Future<List<Refeicao>> getRefeicoesPorData(String data) async {
-    final db = await database;
-    final rows = await db.query(
-      _tabelaRefeicoes,
+    final db = await instance.database;
+    final maps = await db.query(
+      'refeicoes',
       where: 'data = ?',
       whereArgs: [data],
       orderBy: 'horario ASC',
     );
-    return rows.map(Refeicao.fromMap).toList();
+
+    return List.generate(maps.length, (i) => Refeicao.fromMap(maps[i]));
   }
 
-  /// Soma dos macros/calorias/água de um dia (retorna zeros se não houver dados)
   Future<ResumoNutricional> getResumoNutricional(String data) async {
-    final db = await database;
-    final rows = await db.rawQuery('''
-      SELECT
-        COALESCE(SUM(calorias), 0) AS totalCalorias,
-        COALESCE(SUM(carbs),    0) AS totalCarbs,
-        COALESCE(SUM(proteina), 0) AS totalProteina,
-        COALESCE(SUM(gordura),  0) AS totalGordura,
-        COALESCE(SUM(agua),     0) AS totalAgua
-      FROM $_tabelaRefeicoes
-      WHERE data = ?
-    ''', [data]);
-
-    return ResumoNutricional.fromMap(rows.first);
-  }
-
-  /// Todas as refeições (para a tela "Ver todas")
-  Future<List<Refeicao>> getAllRefeicoes() async {
-    final db = await database;
-    final rows = await db.query(
-      _tabelaRefeicoes,
-      orderBy: 'data DESC, horario ASC',
+    final db = await instance.database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'refeicoes',
+      where: 'data = ?',
+      whereArgs: [data],
     );
-    return rows.map(Refeicao.fromMap).toList();
+
+    double cal = 0, carb = 0, prot = 0, gord = 0, agua = 0;
+    for (var m in maps) {
+      cal += (m['calorias'] as num).toDouble();
+      carb += (m['carbs'] as num?)?.toDouble() ?? 0;
+      prot += (m['proteina'] as num?)?.toDouble() ?? 0;
+      gord += (m['gordura'] as num?)?.toDouble() ?? 0;
+      agua += (m['agua'] as num?)?.toDouble() ?? 0;
+    }
+
+    return ResumoNutricional(
+   
+      totalCalorias: cal,
+      totalCarbs: carb,
+      totalProteina: prot,
+      totalGordura: gord,
+      totalAgua: agua,
+    );
   }
 }

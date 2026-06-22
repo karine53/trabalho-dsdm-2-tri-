@@ -4,11 +4,17 @@ import '../database/dabase_helper.dart';
 import '../models/refeicao.dart';
 
 class AdicionarRefeicaoPage extends StatefulWidget {
-  const AdicionarRefeicaoPage({super.key});
+  final Refeicao? refeicaoParaEditar;
+
+  const AdicionarRefeicaoPage({
+    super.key,
+    this.refeicaoParaEditar,
+  });
 
   @override
   State<AdicionarRefeicaoPage> createState() => _AdicionarRefeicaoPageState();
 }
+
 
 class _AdicionarRefeicaoPageState extends State<AdicionarRefeicaoPage> {
   // ── Controllers dos TextFields ───────────────────────────────────────────────
@@ -36,6 +42,7 @@ class _AdicionarRefeicaoPageState extends State<AdicionarRefeicaoPage> {
   TimeOfDay _horarioSelecionado = TimeOfDay.now();
 
   bool _salvando = false;
+  bool _editando = false;
 
   // Opções dos ChoiceChips de categoria
   final List<Map<String, dynamic>> _categorias = [
@@ -51,6 +58,51 @@ class _AdicionarRefeicaoPageState extends State<AdicionarRefeicaoPage> {
     {'label': 'Jantar', 'icon': Icons.nightlight_outlined},
     {'label': 'Lanche', 'icon': Icons.cookie_outlined},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarDadosParaEdicao();
+  }
+
+  // ── Carrega dados da refeição se estiver editando ────────────────────────────
+  void _carregarDadosParaEdicao() {
+    if (widget.refeicaoParaEditar != null) {
+      final refeicao = widget.refeicaoParaEditar!;
+      _editando = true;
+
+      // Preenche os controllers com os dados existentes
+      _nomeController.text = refeicao.nome;
+      _quantidadeController.text = refeicao.descricao ?? '';
+      _caloriasController.text = refeicao.calorias.toString();
+      _carbsController.text = refeicao.carbs.toString();
+      _proteinaController.text = refeicao.proteina.toString();
+      _gorduraController.text = refeicao.gordura.toString();
+
+      // Define os seletores
+      _tipoSelecionado = refeicao.tipo ?? 'Almoço';
+
+      // Parse da data
+      try {
+        _dataSelecionada = DateFormat('yyyy-MM-dd').parse(refeicao.data);
+      } catch (e) {
+        _dataSelecionada = DateTime.now();
+      }
+
+      // Parse do horário
+      if (refeicao.horario != null && refeicao.horario!.isNotEmpty) {
+        try {
+          final parts = refeicao.horario!.split(':');
+          _horarioSelecionado = TimeOfDay(
+            hour: int.parse(parts[0]),
+            minute: int.parse(parts[1]),
+          );
+        } catch (e) {
+          _horarioSelecionado = TimeOfDay.now();
+        }
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -101,7 +153,7 @@ class _AdicionarRefeicaoPageState extends State<AdicionarRefeicaoPage> {
     }
   }
 
-  // ── Salva no banco e retorna para a Home ─────────────────────────────────────
+  // ── Salva ou atualiza no banco e retorna para a Home ─────────────────────────
   Future<void> _salvar() async {
     if (_nomeController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -117,6 +169,7 @@ class _AdicionarRefeicaoPageState extends State<AdicionarRefeicaoPage> {
 
     try {
       final refeicao = Refeicao(
+        id: _editando ? widget.refeicaoParaEditar!.id : null,
         nome: _nomeController.text.trim(),
         descricao: _quantidadeController.text.trim().isEmpty
             ? null
@@ -140,7 +193,12 @@ class _AdicionarRefeicaoPageState extends State<AdicionarRefeicaoPage> {
             '${_horarioSelecionado.hour.toString().padLeft(2, '0')}:${_horarioSelecionado.minute.toString().padLeft(2, '0')}',
       );
 
-      await DatabaseHelper.instance.insertRefeicao(refeicao);
+      // Se está editando, faz UPDATE; caso contrário, faz INSERT
+      if (_editando) {
+        await DatabaseHelper.instance.updateRefeicao(refeicao);
+      } else {
+        await DatabaseHelper.instance.insertRefeicao(refeicao);
+      }
 
       if (mounted) {
         // Retorna true para a HomePage recarregar os dados
@@ -174,10 +232,10 @@ class _AdicionarRefeicaoPageState extends State<AdicionarRefeicaoPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
-        // Text: título "Adicionar Refeição" conforme anotação "text" no mockup
-        title: const Text(
-          'Adicionar Refeição',
-          style: TextStyle(
+        // Text: título "Adicionar Refeição" ou "Editar Refeição" conforme anotação "text" no mockup
+        title: Text(
+          _editando ? 'Editar Refeição' : 'Adicionar Refeição',
+          style: const TextStyle(
             color: Colors.black87,
             fontWeight: FontWeight.bold,
             fontSize: 18,
@@ -503,14 +561,14 @@ class _AdicionarRefeicaoPageState extends State<AdicionarRefeicaoPage> {
                           strokeWidth: 2,
                         ),
                       )
-                    : const Row(
+                    : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.check, size: 20),
-                          SizedBox(width: 8),
+                          Icon(_editando ? Icons.edit : Icons.check, size: 20),
+                          const SizedBox(width: 8),
                           Text(
-                            'Salvar Refeição',
-                            style: TextStyle(
+                            _editando ? 'Atualizar Refeição' : 'Salvar Refeição',
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
