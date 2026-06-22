@@ -21,8 +21,9 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
     );
   }
 
@@ -33,6 +34,7 @@ class DatabaseHelper {
         nome TEXT NOT NULL,
         descricao TEXT,
         tipo TEXT,
+        categoria TEXT,
         calorias REAL NOT NULL,
         carbs REAL,
         proteina REAL,
@@ -42,6 +44,13 @@ class DatabaseHelper {
         horario TEXT
       )
     ''');
+  }
+
+  // ── Migração: adiciona a coluna "categoria" em bancos já existentes ────────
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE refeicoes ADD COLUMN categoria TEXT');
+    }
   }
 
   // MÉTODO DE INSERT
@@ -108,5 +117,56 @@ class DatabaseHelper {
       totalGordura: gord,
       totalAgua: agua,
     );
+  }
+
+  // ── Todas as refeições, mais recentes primeiro ──────────────────────────────
+  Future<List<Refeicao>> getAllRefeicoes() async {
+    final db = await instance.database;
+    final maps = await db.query(
+      'refeicoes',
+      orderBy: 'data DESC, horario ASC',
+    );
+    return List.generate(maps.length, (i) => Refeicao.fromMap(maps[i]));
+  }
+
+  // ── Refeições dentro de um intervalo de datas (inclusive) ───────────────────
+  // Usado no Histórico para os filtros "Esta semana" / "Este mês"
+  Future<List<Refeicao>> getRefeicoesPorIntervalo(
+    String dataInicio,
+    String dataFim,
+  ) async {
+    final db = await instance.database;
+    final maps = await db.query(
+      'refeicoes',
+      where: 'data BETWEEN ? AND ?',
+      whereArgs: [dataInicio, dataFim],
+      orderBy: 'data DESC, horario ASC',
+    );
+    return List.generate(maps.length, (i) => Refeicao.fromMap(maps[i]));
+  }
+
+  // ── Busca por nome ou descrição (barra de pesquisa do Histórico) ───────────
+  // Pode ser combinada com um intervalo de datas.
+  Future<List<Refeicao>> buscarRefeicoes(
+    String termo, {
+    String? dataInicio,
+    String? dataFim,
+  }) async {
+    final db = await instance.database;
+    final condicoes = <String>['(nome LIKE ? OR descricao LIKE ?)'];
+    final args = <Object?>['%$termo%', '%$termo%'];
+
+    if (dataInicio != null && dataFim != null) {
+      condicoes.add('data BETWEEN ? AND ?');
+      args.addAll([dataInicio, dataFim]);
+    }
+
+    final maps = await db.query(
+      'refeicoes',
+      where: condicoes.join(' AND '),
+      whereArgs: args,
+      orderBy: 'data DESC, horario ASC',
+    );
+    return List.generate(maps.length, (i) => Refeicao.fromMap(maps[i]));
   }
 }

@@ -81,6 +81,7 @@ class _AdicionarRefeicaoPageState extends State<AdicionarRefeicaoPage> {
 
       // Define os seletores
       _tipoSelecionado = refeicao.tipo ?? 'Almoço';
+      _categoriaSelecionada = refeicao.categoria ?? 'Proteína';
 
       // Parse da data
       try {
@@ -175,6 +176,7 @@ class _AdicionarRefeicaoPageState extends State<AdicionarRefeicaoPage> {
             ? null
             : _quantidadeController.text.trim(),
         tipo: _tipoSelecionado,
+        categoria: _categoriaSelecionada,
         calorias: double.tryParse(
                 _caloriasController.text.replaceAll(',', '.')) ??
             0,

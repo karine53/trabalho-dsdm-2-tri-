@@ -3,6 +3,7 @@ class Refeicao {
   final String nome;
   final String? descricao;
   final String? tipo; // 'Café da Manhã', 'Almoço', 'Lanche', 'Jantar', 'Ceia'
+  final String? categoria; // 'Proteína', 'Vegetal', 'Carboidrato' (chip exibido no histórico)
   final double calorias;
   final double carbs;
   final double proteina;
@@ -16,6 +17,7 @@ class Refeicao {
     required this.nome,
     this.descricao,
     this.tipo,
+    this.categoria,
     required this.calorias,
     this.carbs = 0,
     this.proteina = 0,
@@ -30,6 +32,7 @@ class Refeicao {
     'nome': nome,
     'descricao': descricao,
     'tipo': tipo,
+    'categoria': categoria,
     'calorias': calorias,
     'carbs': carbs,
     'proteina': proteina,
@@ -44,6 +47,7 @@ class Refeicao {
     nome: map['nome'] as String,
     descricao: map['descricao'] as String?,
     tipo: map['tipo'] as String?,
+    categoria: map['categoria'] as String?,
     calorias: (map['calorias'] as num).toDouble(),
     carbs: (map['carbs'] as num? ?? 0).toDouble(),
     proteina: (map['proteina'] as num? ?? 0).toDouble(),
@@ -58,6 +62,7 @@ class Refeicao {
     String? nome,
     String? descricao,
     String? tipo,
+    String? categoria,
     double? calorias,
     double? carbs,
     double? proteina,
@@ -71,6 +76,7 @@ class Refeicao {
         nome: nome ?? this.nome,
         descricao: descricao ?? this.descricao,
         tipo: tipo ?? this.tipo,
+        categoria: categoria ?? this.categoria,
         calorias: calorias ?? this.calorias,
         carbs: carbs ?? this.carbs,
         proteina: proteina ?? this.proteina,
