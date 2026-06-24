@@ -19,6 +19,7 @@ class _HomePageState extends State<HomePage> {
   ResumoNutricional? _resumo;
   List<Refeicao> _refeicoes = [];
   bool _carregando = true;
+  bool _verTodas = false;
 
   // Metas diárias (podem vir de configurações futuramente)
   static const double _metaCalorias = 2000;
@@ -57,7 +58,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   // ── Abre DatePicker para trocar o dia visualizado ────────────────────────────
-  // DropdownButton / DatePicker: conforme anotação no mockup da home
   Future<void> _selecionarData() async {
     final picked = await showDatePicker(
       context: context,
@@ -83,7 +83,6 @@ class _HomePageState extends State<HomePage> {
       context,
       MaterialPageRoute(builder: (_) => const AdicionarRefeicaoPage()),
     );
-    // Se salvou com sucesso retorna true e recarrega os dados da home
     if (resultado == true) _carregarDados();
   }
 
@@ -163,9 +162,7 @@ class _HomePageState extends State<HomePage> {
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
-              // Container: bloco verde do topo
               _buildHeader(),
-              // Cards sobrepostos no container verde
               Transform.translate(
                 offset: const Offset(0, -30),
                 child: Padding(
@@ -181,19 +178,15 @@ class _HomePageState extends State<HomePage> {
                         )
                       : Column(
                           children: [
-                            // Card: Resumo Nutricional
                             _buildResumoNutricional(),
                             const SizedBox(height: 10),
-                            // Row: Macros (Carbs, Proteína, Gordura)
                             _buildMacros(),
                             const SizedBox(height: 15),
-                            // Row: Estatísticas (Pontuação, Refeições, Água)
                             _buildEstatisticas(),
                           ],
                         ),
                 ),
               ),
-              // Seção de refeições do dia
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
@@ -201,10 +194,26 @@ class _HomePageState extends State<HomePage> {
                     _buildCabecalhoRefeicoes(),
                     if (!_carregando && _refeicoes.isEmpty)
                       _buildEstadoVazio()
-                    else
-                      ..._refeicoes.map((r) => _buildMealCard(r)),
+                    else ...[
+                      ...(_verTodas
+                              ? _refeicoes
+                              : _refeicoes.take(3).toList())
+                          .map((r) => _buildMealCard(r)),
+                      if (!_verTodas && _refeicoes.length > 3)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Center(
+                            child: Text(
+                              '+ ${_refeicoes.length - 3} refeição(ões) ocultada(s) — toque em "Ver todas"',
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                     const SizedBox(height: 20),
-                    // ElevatedButton: Adicionar Refeição
                     _buildBotaoAdicionar(),
                     const SizedBox(height: 20),
                   ],
@@ -232,36 +241,15 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Text: título principal
-              const Text(
-                'Como está sua\nalimentação hoje?',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              // IconButton: pesquisa conforme anotação "iconbutton" no mockup
-              IconButton(
-                onPressed: () {
-                  /* TODO: tela de busca */
-                },
-                icon: const Icon(Icons.search, color: Colors.white, size: 26),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.white24,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ],
+          const Text(
+            'Como está sua\nalimentação hoje?',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 10),
-          // DropdownButton de data — abre DatePicker ao tocar
-          // conforme anotação "DropdownButton" no mockup
           GestureDetector(
             onTap: _selecionarData,
             child: Container(
@@ -273,13 +261,11 @@ class _HomePageState extends State<HomePage> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Text: data do dia selecionado
                   Text(
                     _dataFormatada,
                     style: const TextStyle(color: Colors.white, fontSize: 12),
                   ),
                   const SizedBox(width: 4),
-                  // Icon: seta do dropdown
                   const Icon(
                     Icons.arrow_drop_down,
                     color: Colors.white,
@@ -305,12 +291,10 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Text: "Resumo Nutricional"
             const Text(
               'Resumo Nutricional',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
-            // Text: meta diária
             Text(
               'Meta diária: ${NumberFormat('#,###', 'pt_BR').format(_metaCalorias.round())} kcal',
               style: TextStyle(color: Colors.grey[600], fontSize: 12),
@@ -320,7 +304,6 @@ class _HomePageState extends State<HomePage> {
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
               children: [
-                // Text: total de calorias (vem do banco)
                 Text(
                   NumberFormat('#,###', 'pt_BR').format(_totalCalorias.round()),
                   style: const TextStyle(
@@ -342,7 +325,6 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             const SizedBox(height: 10),
-            // LinearProgressIndicator: progresso do dia (vem do banco)
             LinearProgressIndicator(
               value: prog,
               backgroundColor: const Color(0xFFE0E0E0),
@@ -429,18 +411,18 @@ class _HomePageState extends State<HomePage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Text: "Refeições de Hoje"
         const Text(
           'Refeições de Hoje',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        // TextButton: "Ver todas"
-        TextButton(
-          onPressed: () {
-            /* TODO: tela de lista completa */
-          },
-          child: const Text('Ver todas', style: TextStyle(color: Colors.green)),
-        ),
+        if (_refeicoes.length > 3)
+          TextButton(
+            onPressed: () => setState(() => _verTodas = !_verTodas),
+            child: Text(
+              _verTodas ? 'Ver menos' : 'Ver todas',
+              style: const TextStyle(color: Colors.green),
+            ),
+          ),
       ],
     );
   }
@@ -512,7 +494,6 @@ class _HomePageState extends State<HomePage> {
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            // LinearProgressIndicator: barra do macro (vem do banco)
             LinearProgressIndicator(
               value: progress,
               backgroundColor: color.withOpacity(0.1),
@@ -540,10 +521,8 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.symmetric(vertical: 15),
         child: Column(
           children: [
-            // Icon: ícone da estatística
             Icon(iconData, color: iconColor, size: 24),
             const SizedBox(height: 8),
-            // Text: valor (vem do banco)
             Text(
               value,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -592,14 +571,12 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.all(12),
               child: Row(
                 children: [
-                  // Container: fundo do ícone
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.green[50],
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    // Icon: ícone do tipo de refeição (vem do banco)
                     child: Icon(
                       _iconePorTipo(refeicao.tipo),
                       color: Colors.green[700],
@@ -611,7 +588,6 @@ class _HomePageState extends State<HomePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Text: nome da refeição (vem do banco)
                         Text(
                           refeicao.nome,
                           style: const TextStyle(
@@ -619,7 +595,6 @@ class _HomePageState extends State<HomePage> {
                             fontSize: 14,
                           ),
                         ),
-                        // Text: quantidade/descrição (vem do banco)
                         if (refeicao.descricao != null &&
                             refeicao.descricao!.isNotEmpty)
                           Text(
@@ -637,7 +612,6 @@ class _HomePageState extends State<HomePage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      // Text: calorias (vem do banco)
                       Text(
                         '${refeicao.calorias.round()} kcal',
                         style: const TextStyle(
@@ -646,7 +620,6 @@ class _HomePageState extends State<HomePage> {
                           fontSize: 12,
                         ),
                       ),
-                      // Text: horário (vem do banco)
                       if (refeicao.horario != null)
                         Text(
                           refeicao.horario!,
