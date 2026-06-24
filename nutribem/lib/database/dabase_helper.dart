@@ -56,7 +56,12 @@ class DatabaseHelper {
   // MÉTODO DE INSERT
   Future<int> insertRefeicao(Refeicao refeicao) async {
     final db = await instance.database;
-    return await db.insert('refeicoes', refeicao.toMap());
+
+    final id = await db.insert('refeicoes', refeicao.toMap());
+
+    print('SALVOU ID: $id');
+
+    return id;
   }
 
   // MÉTODO DE UPDATE (Necessário para a edição que criamos!)
@@ -73,11 +78,7 @@ class DatabaseHelper {
   // MÉTODO DE DELETE
   Future<int> deleteRefeicao(int id) async {
     final db = await instance.database;
-    return await db.delete(
-      'refeicoes',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('refeicoes', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<List<Refeicao>> getRefeicoesPorData(String data) async {
@@ -110,7 +111,6 @@ class DatabaseHelper {
     }
 
     return ResumoNutricional(
-   
       totalCalorias: cal,
       totalCarbs: carb,
       totalProteina: prot,
@@ -122,10 +122,7 @@ class DatabaseHelper {
   // ── Todas as refeições, mais recentes primeiro ──────────────────────────────
   Future<List<Refeicao>> getAllRefeicoes() async {
     final db = await instance.database;
-    final maps = await db.query(
-      'refeicoes',
-      orderBy: 'data DESC, horario ASC',
-    );
+    final maps = await db.query('refeicoes', orderBy: 'data DESC, horario ASC');
     return List.generate(maps.length, (i) => Refeicao.fromMap(maps[i]));
   }
 

@@ -38,7 +38,13 @@ class _HomePageState extends State<HomePage> {
     setState(() => _carregando = true);
     try {
       final dataStr = DateFormat('yyyy-MM-dd').format(_dataSelecionada);
+
+      print('BUSCANDO DATA: $dataStr');
+
       final refeicoes = await _db.getRefeicoesPorData(dataStr);
+
+      print('REFEIÇÕES ENCONTRADAS: ${refeicoes.length}');
+
       final resumo = await _db.getResumoNutricional(dataStr);
       setState(() {
         _refeicoes = refeicoes;
@@ -123,8 +129,13 @@ class _HomePageState extends State<HomePage> {
   String get _dataFormatada {
     final hoje = DateTime.now();
     final h = DateTime(hoje.year, hoje.month, hoje.day);
-    final s = DateTime(_dataSelecionada.year, _dataSelecionada.month, _dataSelecionada.day);
-    if (s == h) return DateFormat("EEE, d MMM yyyy", 'pt_BR').format(_dataSelecionada);
+    final s = DateTime(
+      _dataSelecionada.year,
+      _dataSelecionada.month,
+      _dataSelecionada.day,
+    );
+    if (s == h)
+      return DateFormat("EEE, d MMM yyyy", 'pt_BR').format(_dataSelecionada);
     if (s == h.subtract(const Duration(days: 1))) {
       return 'Ontem, ${DateFormat("d MMM", 'pt_BR').format(_dataSelecionada)}';
     }
@@ -132,12 +143,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   double get _totalCalorias => _resumo?.totalCalorias ?? 0;
-  double get _totalCarbs    => _resumo?.totalCarbs    ?? 0;
+  double get _totalCarbs => _resumo?.totalCarbs ?? 0;
   double get _totalProteina => _resumo?.totalProteina ?? 0;
-  double get _totalGordura  => _resumo?.totalGordura  ?? 0;
-  double get _totalAgua     => _resumo?.totalAgua     ?? 0;
-  int    get _totalRefeicoes => _refeicoes.length;
-  double get _pontuacao => ((_totalCalorias / _metaCalorias) * 100).clamp(0, 100);
+  double get _totalGordura => _resumo?.totalGordura ?? 0;
+  double get _totalAgua => _resumo?.totalAgua ?? 0;
+  int get _totalRefeicoes => _refeicoes.length;
+  double get _pontuacao =>
+      ((_totalCalorias / _metaCalorias) * 100).clamp(0, 100);
 
   // ── BUILD ────────────────────────────────────────────────────────────────────
   @override
@@ -161,7 +173,11 @@ class _HomePageState extends State<HomePage> {
                   child: _carregando
                       ? const Padding(
                           padding: EdgeInsets.symmetric(vertical: 40),
-                          child: Center(child: CircularProgressIndicator(color: Color(0xFF1B5E20))),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: Color(0xFF1B5E20),
+                            ),
+                          ),
                         )
                       : Column(
                           children: [
@@ -222,15 +238,23 @@ class _HomePageState extends State<HomePage> {
               // Text: título principal
               const Text(
                 'Como está sua\nalimentação hoje?',
-                style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               // IconButton: pesquisa conforme anotação "iconbutton" no mockup
               IconButton(
-                onPressed: () { /* TODO: tela de busca */ },
+                onPressed: () {
+                  /* TODO: tela de busca */
+                },
                 icon: const Icon(Icons.search, color: Colors.white, size: 26),
                 style: IconButton.styleFrom(
                   backgroundColor: Colors.white24,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ],
@@ -242,15 +266,25 @@ class _HomePageState extends State<HomePage> {
             onTap: _selecionarData,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(20)),
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(20),
+              ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Text: data do dia selecionado
-                  Text(_dataFormatada, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                  Text(
+                    _dataFormatada,
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
                   const SizedBox(width: 4),
                   // Icon: seta do dropdown
-                  const Icon(Icons.arrow_drop_down, color: Colors.white, size: 16),
+                  const Icon(
+                    Icons.arrow_drop_down,
+                    color: Colors.white,
+                    size: 16,
+                  ),
                 ],
               ),
             ),
@@ -272,10 +306,15 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Text: "Resumo Nutricional"
-            const Text('Resumo Nutricional', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const Text(
+              'Resumo Nutricional',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
             // Text: meta diária
-            Text('Meta diária: ${NumberFormat('#,###', 'pt_BR').format(_metaCalorias.round())} kcal',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+            Text(
+              'Meta diária: ${NumberFormat('#,###', 'pt_BR').format(_metaCalorias.round())} kcal',
+              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+            ),
             const SizedBox(height: 15),
             Row(
               crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -284,10 +323,17 @@ class _HomePageState extends State<HomePage> {
                 // Text: total de calorias (vem do banco)
                 Text(
                   NumberFormat('#,###', 'pt_BR').format(_totalCalorias.round()),
-                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF4CAF50)),
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF4CAF50),
+                  ),
                 ),
                 const SizedBox(width: 5),
-                const Text('kcal', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                const Text(
+                  'kcal',
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                ),
                 const Spacer(),
                 Text(
                   'Restam ${NumberFormat('#,###', 'pt_BR').format((_metaCalorias - _totalCalorias).clamp(0, _metaCalorias).round())} kcal',
@@ -314,11 +360,32 @@ class _HomePageState extends State<HomePage> {
   Widget _buildMacros() {
     return Row(
       children: [
-        Expanded(child: _buildMacroCard('Carbs',    '${_totalCarbs.round()}g',    Colors.blue,   (_totalCarbs    / _metaCarbs).clamp(0.0, 1.0))),
+        Expanded(
+          child: _buildMacroCard(
+            'Carbs',
+            '${_totalCarbs.round()}g',
+            Colors.blue,
+            (_totalCarbs / _metaCarbs).clamp(0.0, 1.0),
+          ),
+        ),
         const SizedBox(width: 10),
-        Expanded(child: _buildMacroCard('Proteína', '${_totalProteina.round()}g', Colors.orange, (_totalProteina / _metaProteina).clamp(0.0, 1.0))),
+        Expanded(
+          child: _buildMacroCard(
+            'Proteína',
+            '${_totalProteina.round()}g',
+            Colors.orange,
+            (_totalProteina / _metaProteina).clamp(0.0, 1.0),
+          ),
+        ),
         const SizedBox(width: 10),
-        Expanded(child: _buildMacroCard('Gordura',  '${_totalGordura.round()}g',  Colors.red,    (_totalGordura  / _metaGordura).clamp(0.0, 1.0))),
+        Expanded(
+          child: _buildMacroCard(
+            'Gordura',
+            '${_totalGordura.round()}g',
+            Colors.red,
+            (_totalGordura / _metaGordura).clamp(0.0, 1.0),
+          ),
+        ),
       ],
     );
   }
@@ -327,11 +394,32 @@ class _HomePageState extends State<HomePage> {
   Widget _buildEstatisticas() {
     return Row(
       children: [
-        Expanded(child: _buildStatCard('${_pontuacao.round()}',              'Pontuação', Icons.star,       Colors.amber)),
+        Expanded(
+          child: _buildStatCard(
+            '${_pontuacao.round()}',
+            'Pontuação',
+            Icons.star,
+            Colors.amber,
+          ),
+        ),
         const SizedBox(width: 10),
-        Expanded(child: _buildStatCard('$_totalRefeicoes',                   'Refeições', Icons.restaurant, Colors.grey)),
+        Expanded(
+          child: _buildStatCard(
+            '$_totalRefeicoes',
+            'Refeições',
+            Icons.restaurant,
+            Colors.grey,
+          ),
+        ),
         const SizedBox(width: 10),
-        Expanded(child: _buildStatCard('${_totalAgua.toStringAsFixed(1)} L', 'Água',      Icons.water_drop, Colors.blue)),
+        Expanded(
+          child: _buildStatCard(
+            '${_totalAgua.toStringAsFixed(1)} L',
+            'Água',
+            Icons.water_drop,
+            Colors.blue,
+          ),
+        ),
       ],
     );
   }
@@ -342,10 +430,15 @@ class _HomePageState extends State<HomePage> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         // Text: "Refeições de Hoje"
-        const Text('Refeições de Hoje', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        const Text(
+          'Refeições de Hoje',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         // TextButton: "Ver todas"
         TextButton(
-          onPressed: () { /* TODO: tela de lista completa */ },
+          onPressed: () {
+            /* TODO: tela de lista completa */
+          },
           child: const Text('Ver todas', style: TextStyle(color: Colors.green)),
         ),
       ],
@@ -360,9 +453,15 @@ class _HomePageState extends State<HomePage> {
         children: [
           Icon(Icons.restaurant_menu, size: 48, color: Colors.grey[300]),
           const SizedBox(height: 12),
-          Text('Nenhuma refeição registrada', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+          Text(
+            'Nenhuma refeição registrada',
+            style: TextStyle(color: Colors.grey[500], fontSize: 14),
+          ),
           const SizedBox(height: 4),
-          Text('Toque em "+ Adicionar Refeição" para começar', style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+          Text(
+            'Toque em "+ Adicionar Refeição" para começar',
+            style: TextStyle(color: Colors.grey[400], fontSize: 12),
+          ),
         ],
       ),
     );
@@ -378,15 +477,25 @@ class _HomePageState extends State<HomePage> {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF1B5E20),
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
         ),
-        child: const Text('+ Adicionar Refeição', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        child: const Text(
+          '+ Adicionar Refeição',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
 
   // ── Card de macro ─────────────────────────────────────────────────────────────
-  Widget _buildMacroCard(String label, String value, Color color, double progress) {
+  Widget _buildMacroCard(
+    String label,
+    String value,
+    Color color,
+    double progress,
+  ) {
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -394,8 +503,14 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         child: Column(
           children: [
-            Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-            Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 10, color: Colors.grey),
+            ),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
             // LinearProgressIndicator: barra do macro (vem do banco)
             LinearProgressIndicator(
@@ -412,7 +527,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   // ── Card de estatística ───────────────────────────────────────────────────────
-  Widget _buildStatCard(String value, String label, IconData iconData, Color iconColor) {
+  Widget _buildStatCard(
+    String value,
+    String label,
+    IconData iconData,
+    Color iconColor,
+  ) {
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -424,8 +544,14 @@ class _HomePageState extends State<HomePage> {
             Icon(iconData, color: iconColor, size: 24),
             const SizedBox(height: 8),
             // Text: valor (vem do banco)
-            Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 10, color: Colors.grey),
+            ),
           ],
         ),
       ),
@@ -442,7 +568,10 @@ class _HomePageState extends State<HomePage> {
         background: Container(
           alignment: Alignment.centerRight,
           padding: const EdgeInsets.only(right: 20),
-          decoration: BoxDecoration(color: Colors.red[400], borderRadius: BorderRadius.circular(15)),
+          decoration: BoxDecoration(
+            color: Colors.red[400],
+            borderRadius: BorderRadius.circular(15),
+          ),
           child: const Icon(Icons.delete_outline, color: Colors.white),
         ),
         confirmDismiss: (_) async {
@@ -471,7 +600,11 @@ class _HomePageState extends State<HomePage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     // Icon: ícone do tipo de refeição (vem do banco)
-                    child: Icon(_iconePorTipo(refeicao.tipo), color: Colors.green[700], size: 24),
+                    child: Icon(
+                      _iconePorTipo(refeicao.tipo),
+                      color: Colors.green[700],
+                      size: 24,
+                    ),
                   ),
                   const SizedBox(width: 15),
                   Expanded(
@@ -479,11 +612,25 @@ class _HomePageState extends State<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Text: nome da refeição (vem do banco)
-                        Text(refeicao.nome, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text(
+                          refeicao.nome,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
                         // Text: quantidade/descrição (vem do banco)
-                        if (refeicao.descricao != null && refeicao.descricao!.isNotEmpty)
-                          Text(refeicao.descricao!, style: const TextStyle(color: Colors.grey, fontSize: 11),
-                              maxLines: 1, overflow: TextOverflow.ellipsis),
+                        if (refeicao.descricao != null &&
+                            refeicao.descricao!.isNotEmpty)
+                          Text(
+                            refeicao.descricao!,
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 11,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                       ],
                     ),
                   ),
@@ -491,11 +638,23 @@ class _HomePageState extends State<HomePage> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       // Text: calorias (vem do banco)
-                      Text('${refeicao.calorias.round()} kcal',
-                          style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12)),
+                      Text(
+                        '${refeicao.calorias.round()} kcal',
+                        style: const TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
                       // Text: horário (vem do banco)
                       if (refeicao.horario != null)
-                        Text(refeicao.horario!, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                        Text(
+                          refeicao.horario!,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 10,
+                          ),
+                        ),
                     ],
                   ),
                 ],
@@ -510,12 +669,18 @@ class _HomePageState extends State<HomePage> {
   // ── Ícone por tipo de refeição ────────────────────────────────────────────────
   IconData _iconePorTipo(String? tipo) {
     switch (tipo?.toLowerCase()) {
-      case 'café da manhã': return Icons.wb_sunny_outlined;
-      case 'almoço':        return Icons.wb_cloudy_outlined;
-      case 'lanche':        return Icons.cookie_outlined;
-      case 'jantar':        return Icons.nightlight_outlined;
-      case 'ceia':          return Icons.bedtime_outlined;
-      default:              return Icons.restaurant_outlined;
+      case 'café da manhã':
+        return Icons.wb_sunny_outlined;
+      case 'almoço':
+        return Icons.wb_cloudy_outlined;
+      case 'lanche':
+        return Icons.cookie_outlined;
+      case 'jantar':
+        return Icons.nightlight_outlined;
+      case 'ceia':
+        return Icons.bedtime_outlined;
+      default:
+        return Icons.restaurant_outlined;
     }
   }
 }
