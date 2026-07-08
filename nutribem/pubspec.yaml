@@ -15,14 +15,25 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
+
+  # Banco de dados
   sqflite: ^2.4.2+1
   path: ^1.9.1
-  intl: ^0.20.2
   sqflite_common_ffi: ^2.4.0+3
-  
-  # Novas dependências para notificações
-  flutter_local_notifications: ^17.0.0
+
+  # Datas
+  intl: ^0.20.2
+
+  # Notificações
+  flutter_local_notifications: ^18.0.1
+  permission_handler: ^12.0.3
   timezone: ^0.9.2
+  flutter_timezone: ^4.1.0
+
+  # Salvar configurações do usuário
+  shared_preferences: ^2.5.3
+
+
 
 dev_dependencies:
   flutter_test:
