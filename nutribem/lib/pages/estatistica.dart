@@ -111,11 +111,7 @@ class _EstatisticasPageState extends State<EstatisticasPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          '04 – Estatísticas',
-          style: TextStyle(color: Colors.grey, fontSize: 14),
-        ),
-        centerTitle: false,
+        
       ),
       body: _carregando 
         ? const Center(child: CircularProgressIndicator(color: Color(0xFF1B5E20)))

@@ -124,10 +124,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                   color: Colors.red[100],
                   child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
                 ),
-              const Text(
-                '05 - Configurações',
-                style: TextStyle(color: Colors.grey, fontSize: 14),
-              ),
+              
               const SizedBox(height: 8),
               const Text(
                 'Configurações',
