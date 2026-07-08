@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/refeicao.dart';
 import '../models/resumo_nutricional.dart';
+import '../models/configuraçoes.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -21,13 +22,14 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
   }
 
   Future _createDB(Database db, int version) async {
+    print("Criando banco de dados...");
     await db.execute('''
       CREATE TABLE refeicoes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,27 +46,86 @@ class DatabaseHelper {
         horario TEXT
       )
     ''');
+
+    await _createSettingsTable(db);
   }
 
-  // ── Migração: adiciona a coluna "categoria" em bancos já existentes ────────
-  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await db.execute('ALTER TABLE refeicoes ADD COLUMN categoria TEXT');
+  Future _createSettingsTable(Database db) async {
+    print("Criando tabela de configurações...");
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS settings (
+        id INTEGER PRIMARY KEY,
+        notificationsEnabled INTEGER NOT NULL,
+        waterReminderEnabled INTEGER NOT NULL,
+        dailySummaryEnabled INTEGER NOT NULL,
+        breakfastTime TEXT NOT NULL,
+        lunchTime TEXT NOT NULL,
+        snackTime TEXT NOT NULL,
+        dinnerTime TEXT NOT NULL
+      )
+    ''');
+    
+    // Verifica se já existe o registro 1 para não duplicar no onUpgrade
+    final List<Map<String, dynamic>> existing = await db.query('settings', where: 'id = ?', whereArgs: [1]);
+    if (existing.isEmpty) {
+      print("Inserindo configurações padrão...");
+      await db.insert('settings', AppSettings().toMap());
     }
   }
 
-  // MÉTODO DE INSERT
-  Future<int> insertRefeicao(Refeicao refeicao) async {
-    final db = await instance.database;
-
-    final id = await db.insert('refeicoes', refeicao.toMap());
-
-    print('SALVOU ID: $id');
-
-    return id;
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    print("Fazendo upgrade do banco de $oldVersion para $newVersion");
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE refeicoes ADD COLUMN categoria TEXT');
+    }
+    if (oldVersion < 3) {
+      await _createSettingsTable(db);
+    }
   }
 
-  // MÉTODO DE UPDATE (Necessário para a edição que criamos!)
+  // --- MÉTODOS DE CONFIGURAÇÕES ---
+  
+  Future<AppSettings> getSettings() async {
+    try {
+      final db = await instance.database;
+      final List<Map<String, dynamic>> maps = await db.query('settings', where: 'id = ?', whereArgs: [1]);
+
+      if (maps.isNotEmpty) {
+        return AppSettings.fromMap(maps.first);
+      } else {
+        print("Configurações não encontradas, criando padrões...");
+        final defaultSettings = AppSettings();
+        await db.insert('settings', defaultSettings.toMap());
+        return defaultSettings;
+      }
+    } catch (e) {
+      print("Erro ao buscar configurações: $e");
+      return AppSettings(); // Retorna padrões em caso de erro crítico
+    }
+  }
+
+  Future<int> updateSettings(AppSettings settings) async {
+    try {
+      final db = await instance.database;
+      return await db.update(
+        'settings',
+        settings.toMap(),
+        where: 'id = ?',
+        whereArgs: [1],
+      );
+    } catch (e) {
+      print("Erro ao atualizar configurações: $e");
+      return 0;
+    }
+  }
+
+  // --- MÉTODOS DE REFEIÇÃO ---
+
+  Future<int> insertRefeicao(Refeicao refeicao) async {
+    final db = await instance.database;
+    return await db.insert('refeicoes', refeicao.toMap());
+  }
+
   Future<int> updateRefeicao(Refeicao refeicao) async {
     final db = await instance.database;
     return await db.update(
@@ -75,7 +136,6 @@ class DatabaseHelper {
     );
   }
 
-  // MÉTODO DE DELETE
   Future<int> deleteRefeicao(int id) async {
     final db = await instance.database;
     return await db.delete('refeicoes', where: 'id = ?', whereArgs: [id]);
@@ -89,7 +149,6 @@ class DatabaseHelper {
       whereArgs: [data],
       orderBy: 'horario ASC',
     );
-
     return List.generate(maps.length, (i) => Refeicao.fromMap(maps[i]));
   }
 
@@ -119,19 +178,13 @@ class DatabaseHelper {
     );
   }
 
-  // ── Todas as refeições, mais recentes primeiro ──────────────────────────────
   Future<List<Refeicao>> getAllRefeicoes() async {
     final db = await instance.database;
     final maps = await db.query('refeicoes', orderBy: 'data DESC, horario ASC');
     return List.generate(maps.length, (i) => Refeicao.fromMap(maps[i]));
   }
 
-  // ── Refeições dentro de um intervalo de datas (inclusive) ───────────────────
-  // Usado no Histórico para os filtros "Esta semana" / "Este mês"
-  Future<List<Refeicao>> getRefeicoesPorIntervalo(
-    String dataInicio,
-    String dataFim,
-  ) async {
+  Future<List<Refeicao>> getRefeicoesPorIntervalo(String dataInicio, String dataFim) async {
     final db = await instance.database;
     final maps = await db.query(
       'refeicoes',
@@ -142,13 +195,7 @@ class DatabaseHelper {
     return List.generate(maps.length, (i) => Refeicao.fromMap(maps[i]));
   }
 
-  // ── Busca por nome ou descrição (barra de pesquisa do Histórico) ───────────
-  // Pode ser combinada com um intervalo de datas.
-  Future<List<Refeicao>> buscarRefeicoes(
-    String termo, {
-    String? dataInicio,
-    String? dataFim,
-  }) async {
+  Future<List<Refeicao>> buscarRefeicoes(String termo, {String? dataInicio, String? dataFim}) async {
     final db = await instance.database;
     final condicoes = <String>['(nome LIKE ? OR descricao LIKE ?)'];
     final args = <Object?>['%$termo%', '%$termo%'];
