@@ -93,48 +93,35 @@ class NotificationService {
 
 
 
-  static Future<void> agendarNotificacao({
-    required int id,
-    required String titulo,
-    required String corpo,
-    required int hora,
-    required int minuto,
-  }) async {
-
-
-    await _notificationsPlugin.zonedSchedule(
-
-      id,
-
-      titulo,
-
-      corpo,
-
-      _proximaData(hora, minuto),
-
-      const NotificationDetails(
-
-        android: AndroidNotificationDetails(
-          'nutribem_lembretes',
-          'Lembretes NutriBem',
-          channelDescription:
-              'Notificações de refeições e água',
-          importance: Importance.max,
-          priority: Priority.high,
-        ),
-
+ static Future<void> agendarNotificacao({
+  required int id,
+  required String titulo,
+  required String corpo,
+  required int hora,
+  required int minuto,
+}) async {
+  await _notificationsPlugin.zonedSchedule(
+    id,
+    titulo,
+    corpo,
+    _proximaData(hora, minuto),
+    const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'nutribem_lembretes',
+        'Lembretes NutriBem',
+        channelDescription: 'Notificações de refeições e água',
+        importance: Importance.max,
+        priority: Priority.high,
       ),
-
-
-      androidScheduleMode:
-          AndroidScheduleMode.exactAllowWhileIdle,
-
-
-      matchDateTimeComponents:
-          DateTimeComponents.time,
-
-    );
-  }
+    ),
+    uiLocalNotificationDateInterpretation:
+        UILocalNotificationDateInterpretation.absoluteTime,
+    androidScheduleMode:
+        AndroidScheduleMode.exactAllowWhileIdle,
+    matchDateTimeComponents:
+        DateTimeComponents.time,
+  );
+}
 
 
 
