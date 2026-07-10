@@ -1,15 +1,12 @@
 import 'dart:io';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
-
-
 import 'pages/pg-inicial.dart';
 import 'pages/historico_page.dart';
 import 'pages/estatistica.dart';
@@ -41,20 +38,18 @@ void main() async {
 
 
   // Configura notificações
+  if (!kIsWeb) {
   await configurarTimezone();
-
   await NotificationService.init();
+}
 
 
 
   // Inicializa SQLite para Desktop
-  if (Platform.isWindows || Platform.isLinux) {
-
-    sqfliteFfiInit();
-
-    databaseFactory = databaseFactoryFfi;
-
-  }
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
+}
 
 
 
