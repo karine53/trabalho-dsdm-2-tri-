@@ -1,5 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:permission_handler/permission_handler.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -33,7 +33,7 @@ class NotificationService {
         );
 
 
-    await _notificationsPlugin.initialize(settings);
+    //await _notificationsPlugin.initialize(settings);
 
 
     const AndroidNotificationChannel channel =
@@ -55,7 +55,7 @@ class NotificationService {
 
   static Future<void> solicitarPermissao() async {
 
-    await Permission.notification.request();
+   // await Permission.notification.request();
 
   }
 

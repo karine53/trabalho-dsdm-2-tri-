@@ -477,19 +477,25 @@ class _AdicionarRefeicaoPageState extends State<AdicionarRefeicaoPage> {
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: Row(
-                            children: [
-                              // Icon: ícone de calendário
-                              const Icon(Icons.calendar_today_outlined,
-                                  size: 18, color: Colors.grey),
-                              const SizedBox(width: 8),
-                              // Text: data formatada
-                              Text(
-                                DateFormat('dd/MM/yyyy')
-                                    .format(_dataSelecionada),
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                            ],
-                          ),
+  children: [
+    const Icon(
+      Icons.calendar_today_outlined,
+      size: 18,
+      color: Colors.grey,
+    ),
+
+    const SizedBox(width: 8),
+
+    Expanded(
+      child: Text(
+        DateFormat('dd/MM/yyyy')
+            .format(_dataSelecionada),
+        style: const TextStyle(fontSize: 14),
+        overflow: TextOverflow.ellipsis,
+      ),
+    ),
+  ],
+),
                         ),
                       ),
                     ],

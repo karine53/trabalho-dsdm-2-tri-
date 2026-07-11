@@ -16,17 +16,22 @@ class DatabaseHelper {
     return _database!;
   }
 
-  Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
+Future<Database> _initDB(String filePath) async {
 
-    return await openDatabase(
-      path,
-      version: 3,
-      onCreate: _createDB,
-      onUpgrade: _upgradeDB,
-    );
-  }
+  final dbPath = await getDatabasesPath();
+
+  final path = join(
+    dbPath,
+    filePath,
+  );
+
+  return await openDatabase(
+    path,
+    version: 3,
+    onCreate: _createDB,
+    onUpgrade: _upgradeDB,
+  );
+}
 
   Future _createDB(Database db, int version) async {
     print("Criando banco de dados...");
@@ -122,9 +127,25 @@ class DatabaseHelper {
   // --- MÉTODOS DE REFEIÇÃO ---
 
   Future<int> insertRefeicao(Refeicao refeicao) async {
-    final db = await instance.database;
-    return await db.insert('refeicoes', refeicao.toMap());
-  }
+
+  print("1 - entrou no insert");
+
+  final db = await instance.database;
+
+  print("2 - banco aberto");
+
+
+  final id = await db.insert(
+    'refeicoes',
+    refeicao.toMap(),
+  );
+
+
+  print("3 - salvou id: $id");
+
+
+  return id;
+}
 
   Future<int> updateRefeicao(Refeicao refeicao) async {
     final db = await instance.database;
