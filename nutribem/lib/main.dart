@@ -1,12 +1,11 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
-import 'package:flutter_timezone/flutter_timezone.dart';
+
 import 'pages/pg-inicial.dart';
 import 'pages/historico_page.dart';
 import 'pages/estatistica.dart';
@@ -15,64 +14,47 @@ import 'pages/configuraçoes.dart';
 import 'services/notification_service.dart';
 
 
-
-// Configura horário local do celular para notificações
-Future<void> configurarTimezone() async {
-
-  tz.initializeTimeZones();
-
-  final timezone =
-      await FlutterTimezone.getLocalTimezone();
-
-  tz.setLocalLocation(
-    tz.getLocation(timezone),
-  );
-
-}
-
-
-
 void main() async {
-
   WidgetsFlutterBinding.ensureInitialized();
 
 
-  // Configura notificações
+  if (!kIsWeb &&
+      (Platform.isWindows ||
+          Platform.isLinux ||
+          Platform.isMacOS)) {
+
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+
+
+  await initializeDateFormatting('pt_BR', null);
+
+
   if (!kIsWeb) {
-  await configurarTimezone();
-  await NotificationService.init();
-}
-
-
-
-  // Inicializa SQLite para Desktop
-  if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
-  sqfliteFfiInit();
-  databaseFactory = databaseFactoryFfi;
-}
-
-
-
-  // Datas em português
-  await initializeDateFormatting(
-    'pt_BR',
-    null,
-  );
+    try {
+      await NotificationService.init();
+    } catch (e) {
+      debugPrint(
+        "Aviso: Notificações não inicializadas: $e",
+      );
+    }
+  }
 
 
   runApp(
     const NutriBemApp(),
   );
-
 }
-
 
 
 
 
 class NutriBemApp extends StatelessWidget {
 
-  const NutriBemApp({super.key});
+  const NutriBemApp({
+    super.key,
+  });
 
 
   @override
@@ -98,12 +80,18 @@ class NutriBemApp extends StatelessWidget {
 
       supportedLocales: const [
 
-        Locale('pt', 'BR'),
+        Locale(
+          'pt',
+          'BR',
+        ),
 
       ],
 
 
-      locale: const Locale('pt', 'BR'),
+      locale: const Locale(
+        'pt',
+        'BR',
+      ),
 
 
 
@@ -131,12 +119,11 @@ class NutriBemApp extends StatelessWidget {
 
 
 
-
-
-
 class MainNavigation extends StatefulWidget {
 
-  const MainNavigation({super.key});
+  const MainNavigation({
+    super.key,
+  });
 
 
   @override
@@ -148,9 +135,7 @@ class MainNavigation extends StatefulWidget {
 
 
 
-
-class _MainNavigationState
-    extends State<MainNavigation> {
+class _MainNavigationState extends State<MainNavigation> {
 
 
   int _indiceSelecionado = 0;
@@ -159,36 +144,25 @@ class _MainNavigationState
 
   Widget _obterPagina(int index) {
 
-
-    switch(index){
-
+    switch(index) {
 
       case 0:
-
         return const HomePage();
 
 
-
       case 1:
-
         return const HistoricoPage();
 
 
-
       case 2:
-
         return const EstatisticasPage();
 
 
-
       case 3:
-
         return const ConfiguracoesPage();
 
 
-
       default:
-
         return const HomePage();
 
     }
@@ -202,27 +176,20 @@ class _MainNavigationState
   @override
   Widget build(BuildContext context) {
 
-
     return Scaffold(
-
 
       body: _obterPagina(
         _indiceSelecionado,
       ),
 
 
-
-      bottomNavigationBar:
-      NavigationBar(
-
+      bottomNavigationBar: NavigationBar(
 
         selectedIndex:
         _indiceSelecionado,
 
 
-
-        onDestinationSelected: (index){
-
+        onDestinationSelected: (index) {
 
           setState(() {
 
@@ -230,14 +197,11 @@ class _MainNavigationState
 
           });
 
-
         },
-
 
 
         backgroundColor:
         Colors.white,
-
 
 
         indicatorColor:
@@ -246,8 +210,8 @@ class _MainNavigationState
 
 
 
-
         destinations: const [
+
 
 
           NavigationDestination(
@@ -257,12 +221,8 @@ class _MainNavigationState
             ),
 
             selectedIcon: Icon(
-
               Icons.home,
-
-              color:
-              Color(0xFF1B5E20),
-
+              color: Color(0xFF1B5E20),
             ),
 
             label: 'Home',
@@ -279,18 +239,13 @@ class _MainNavigationState
             ),
 
             selectedIcon: Icon(
-
               Icons.history,
-
-              color:
-              Color(0xFF1B5E20),
-
+              color: Color(0xFF1B5E20),
             ),
 
             label: 'Histórico',
 
           ),
-
 
 
 
@@ -302,18 +257,13 @@ class _MainNavigationState
             ),
 
             selectedIcon: Icon(
-
               Icons.bar_chart,
-
-              color:
-              Color(0xFF1B5E20),
-
+              color: Color(0xFF1B5E20),
             ),
 
             label: 'Estatísticas',
 
           ),
-
 
 
 
@@ -325,18 +275,13 @@ class _MainNavigationState
             ),
 
             selectedIcon: Icon(
-
               Icons.settings,
-
-              color:
-              Color(0xFF1B5E20),
-
+              color: Color(0xFF1B5E20),
             ),
 
             label: 'Configurações',
 
           ),
-
 
 
         ],

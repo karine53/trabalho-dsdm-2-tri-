@@ -20,6 +20,7 @@ dependencies:
   sqflite: ^2.4.2+1
   path: ^1.9.1
   sqflite_common_ffi: ^2.4.0+3
+  sqflite_common_ffi_web: ^0.4.5+3
 
   # Datas
   intl: ^0.20.2
@@ -32,14 +33,3 @@ dependencies:
 
   # Salvar configurações do usuário
   shared_preferences: ^2.5.3
-
-
-
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-
-  flutter_lints: ^6.0.0
-
-flutter:
-  uses-material-design: true

@@ -35,23 +35,67 @@ class _EstatisticasPageState extends State<EstatisticasPage> {
   }
 
   Future<void> _carregarDados() async {
-    setState(() => _carregando = true);
-    
+
+  setState(() => _carregando = true);
+
+  try {
+
     DateTime agora = DateTime.now();
-    DateTime inicioSemana = agora.subtract(Duration(days: agora.weekday - 1));
-    DateTime fimSemana = inicioSemana.add(const Duration(days: 6));
 
-    String dataInicio = DateFormat('yyyy-MM-dd').format(inicioSemana);
-    String dataFim = DateFormat('yyyy-MM-dd').format(fimSemana);
+    DateTime inicioSemana =
+        agora.subtract(Duration(days: agora.weekday - 1));
 
-    // Buscar refeições do período
-    final refeicoes = await _db.getRefeicoesPorIntervalo(dataInicio, dataFim);
-    
-    // Processar dados para a UI
+    DateTime fimSemana =
+        inicioSemana.add(const Duration(days: 6));
+
+
+    String dataInicio =
+        DateFormat('yyyy-MM-dd').format(inicioSemana);
+
+    String dataFim =
+        DateFormat('yyyy-MM-dd').format(fimSemana);
+
+
+
+    print("BUSCANDO ESTATISTICAS:");
+    print("INICIO: $dataInicio");
+    print("FIM: $dataFim");
+
+
+
+    final refeicoes =
+        await _db.getRefeicoesPorIntervalo(
+          dataInicio,
+          dataFim,
+        );
+
+
+    print("REFEIÇÕES: ${refeicoes.length}");
+
+
+
     _processarEstatisticas(refeicoes);
 
-    setState(() => _carregando = false);
+
+
+  } catch (e) {
+
+    print("ERRO ESTATISTICAS: $e");
+
   }
+
+
+  if (mounted) {
+
+    setState(() {
+
+      _carregando = false;
+
+    });
+
+  }
+
+}
 
   void _processarEstatisticas(List<Refeicao> refeicoes) {
     _totalRefeicoesSemana = refeicoes.length;
@@ -184,15 +228,19 @@ class _EstatisticasPageState extends State<EstatisticasPage> {
                   style: TextStyle(color: Colors.white60, fontSize: 20),
                 ),
                 const Spacer(),
-                const Row(
-                  children: [
-                    Icon(Icons.star, color: Colors.amber, size: 20),
-                    Icon(Icons.star, color: Colors.amber, size: 20),
-                    Icon(Icons.star, color: Colors.amber, size: 20),
-                    Icon(Icons.star, color: Colors.amber, size: 20),
-                    Icon(Icons.star_border, color: Colors.white30, size: 20),
-                  ],
-                )
+                Row(
+  children: List.generate(5, (index) {
+    return Icon(
+      index < (_pontuacaoSemanal / 20).round()
+          ? Icons.star
+          : Icons.star_border,
+      color: index < (_pontuacaoSemanal / 20).round()
+          ? Colors.amber
+          : Colors.white30,
+      size: 20,
+    );
+  }),
+)
               ],
             ),
             const Text(
@@ -236,13 +284,19 @@ class _EstatisticasPageState extends State<EstatisticasPage> {
                   double maxVal = _consumoDiario.reduce((a, b) => a > b ? a : b);
                   if (maxVal == 0) maxVal = 1;
                   double heightFactor = (_consumoDiario[index] / maxVal).clamp(0.1, 1.0);
-                  bool isTer = index == 1; // Destaque na Terça como na imagem
-
+                  bool isTer = _consumoDiario[index] > 0;
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      if (isTer)
-                        const Text('1.680', style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold)),
+                      if (_consumoDiario[index] > 0)
+  Text(
+    '${_consumoDiario[index].round()}',
+    style: const TextStyle(
+      color: Colors.green,
+      fontSize: 10,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
                       const SizedBox(height: 4),
                       Container(
                         width: 30,
