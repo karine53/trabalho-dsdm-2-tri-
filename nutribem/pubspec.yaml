@@ -19,7 +19,7 @@ dependencies:
   path: ^1.9.1
   intl: ^0.20.2
   sqflite_common_ffi: ^2.4.0+3
-  sqflite_common_ffi_web: ^0.4.5+3
+  sqflite_common_ffi_web: ^1.1.2
   
   # Novas dependências para notificações
   flutter_local_notifications: ^18.0.1
