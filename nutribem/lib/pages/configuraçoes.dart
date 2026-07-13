@@ -17,6 +17,7 @@ class ConfiguracoesPage extends StatefulWidget {
   const ConfiguracoesPage({super.key});
 
   @override
+  //objeto que guarda informações que podem mudar
   State<ConfiguracoesPage> createState() => _ConfiguracoesPageState();
 }
 
@@ -25,6 +26,7 @@ class ConfiguracoesPage extends StatefulWidget {
 class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
 
   // Configurações atuais do usuário. Começa nula até carregar do banco.
+  //settings guarda objeto da classe appsettings
   AppSettings? _settings;
 
   // Controla se mostra o spinner de carregando ou já tem dados prontos.

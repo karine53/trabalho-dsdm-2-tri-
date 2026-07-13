@@ -35,14 +35,14 @@ class _HomePageState extends State<HomePage> {
   /// CICLO DE VIDA: 'initState' é o primeiro método executado quando a tela nasce.
   @override
   void initState() {
-    super.initState();
+    super.initState();//o super é usado para acessar a classe pai que é aquela hamepagestate
     _carregarDados(); // Busca os dados no banco assim que abre o app.
   }
 
   /// BUSCA DE DADOS NO BANCO (SQLite)
   /// Usamos 'async' porque a leitura de arquivos/banco é demorada e não pode travar a UI.
-  Future<void> _carregarDados() async {
-    if (!mounted) return; // Segurança: evita atualizar a tela se o usuário já saiu dela.
+  Future<void> _carregarDados() async { //cria o metodo carregardados que n retorna nada só executa a bysca dos dados
+    if (!mounted) return; // usa o mounted pra ver se a tela ainda está aberta Segurança: evita atualizar a tela se o usuário já saiu dela.
     setState(() => _carregando = true); // Inicia a animação de carregamento.
     
     try {
@@ -50,30 +50,31 @@ class _HomePageState extends State<HomePage> {
       final dataStr = DateFormat('yyyy-MM-dd').format(_dataSelecionada);
       
       // 'await' espera a resposta do banco antes de continuar.
-      final refeicoes = await _db.getRefeicoesPorData(dataStr);
-      final resumo = await _db.getResumoNutricional(dataStr);
+      final refeicoes = await _db.getRefeicoesPorData(dataStr);//final pq o valor só é definido uma vez
+      final resumo = await _db.getResumoNutricional(dataStr);//esse get é um metodo que recebe uma data e procura todas as coisas salvas nela
+      // e no final retorna o objeto reumo nutricional e o await é pq o banco demora p responder
       
-      if (mounted) {
-        setState(() {
-          _refeicoes = refeicoes;
+      if (mounted) {//se a pagina estgiver aberta
+        setState(() {//informa que os dados da tela mjudaram
+          _refeicoes = refeicoes;//atualiza refeições e resujmos
           _resumo = resumo;
           _carregando = false; // Para a animação de carregamento.
         });
       }
-    } catch (e) {
+    } catch (e) {//o catch "pega" qualquer erro que aconteceu n o carregamento dos dados
       debugPrint("Erro ao carregar dados na Home: $e");
       if (mounted) {
-        setState(() => _carregando = false);
+        setState(() => _carregando = false);//mesmo se ocorrer erro, o carregamento é encerrado
       }
     }
   }
 
   /// SELETOR DE DATA (Calendário)
   Future<void> _selecionarData() async {
-    final picked = await showDatePicker(
-      context: context,
+    final picked = await showDatePicker(//abre o calendario e quando o usuario escolhe uma data ela fica armazenada em picked
+      context: context,//informa em qual tela o calendario tem q exibir
       initialDate: _dataSelecionada,
-      firstDate: DateTime(2024),
+      firstDate: DateTime(2024),//a primeira data que o usuario pode selecionar
       lastDate: DateTime.now(), // Não permite selecionar datas futuras.
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
@@ -83,16 +84,16 @@ class _HomePageState extends State<HomePage> {
       ),
     );
     // Se o usuário escolheu uma data e ela é diferente da atual, recarrega tudo.
-    if (picked != null && picked != _dataSelecionada) {
-      setState(() => _dataSelecionada = picked);
-      _carregarDados();
+    if (picked != null && picked != _dataSelecionada) {//verifica se o usuario escolheu uma data e se ela é diferente da atual
+      setState(() => _dataSelecionada = picked);///atualiza a data da tela
+      _carregarDados();//busca dnv as refeicoes e o resumo  nutricional daquela data
     }
   }
 
   /// NAVEGAÇÃO: Ir para a tela de adicionar refeição.
   Future<void> _adicionarRefeicao() async {
     // Navigator.push abre a nova tela e o '.then' ou 'await' espera o retorno.
-    final resultado = await Navigator.push<bool>(
+    final resultado = await Navigator.push<bool>(//o bool retorna um valorr booleano
       context,
       MaterialPageRoute(builder: (_) => const AdicionarRefeicaoPage()),
     );
@@ -137,22 +138,28 @@ class _HomePageState extends State<HomePage> {
 
   /// LÓGICA DE FORMATAÇÃO DE DATA
   /// Retorna "Ontem", "Hoje" ou a data formatada em português.
-  String get _dataFormatada {
-    try {
+  String get _dataFormatada {//o get cria um getter que é um metodo que pode ser usado como variavel
+  //o getter retorna a data de um jeito mais bonitinho(frufru)
+    try {//tenta executar um código e se der erro o catch é executado
       final hoje = DateTime.now();
-      final h = DateTime(hoje.year, hoje.month, hoje.day);
-      final s = DateTime(_dataSelecionada.year, _dataSelecionada.month, _dataSelecionada.day);
+      final h = DateTime(hoje.year, hoje.month, hoje.day);//cria uma nova data contendo apenas ano mes e dia
+      final s = DateTime(_dataSelecionada.year, _dataSelecionada.month, _dataSelecionada.day);//faz a mesma coisa mas com a data que o usuario escolheu
+      //a data selecionada é hj? se for retorna a data naquele formato ali
       if (s == h) return DateFormat("EEE, d MMM yyyy", 'pt_BR').format(_dataSelecionada);
+      //o subtracté um metodo do datetime que subtrai um periodo de tempo
+      // de uma data, ele faz isso pra aparecer o dia de ontem
       if (s == h.subtract(const Duration(days: 1))) {
         return 'Ontem, ${DateFormat("d MMM", 'pt_BR').format(_dataSelecionada)}';
       }
+      //se n é hoje nem ontem retorna apenas a data normal
       return DateFormat("EEE, d MMM yyyy", 'pt_BR').format(_dataSelecionada);
-    } catch (e) {
+    } catch (e) {//se der algum erro retorna apenas a data num formato simples
       return "${_dataSelecionada.day}/${_dataSelecionada.month}/${_dataSelecionada.year}";
     }
   }
 
   // GETTERS: Facilitam o acesso aos dados do resumo nutricional.
+  //metodo getter que retorna um valor e o double retorna um numero decimal, no caso o total de calorias
   double get _totalCalorias => _resumo?.totalCalorias ?? 0;
   double get _totalCarbs    => _resumo?.totalCarbs    ?? 0;
   double get _totalProteina => _resumo?.totalProteina ?? 0;
@@ -170,8 +177,10 @@ class _HomePageState extends State<HomePage> {
       // RefreshIndicator: Permite puxar a tela para baixo para atualizar os dados.
       body: RefreshIndicator(
         color: const Color(0xFF1B5E20),
+
         onRefresh: _carregarDados,
-        child: SingleChildScrollView(
+        child: SingleChildScrollView(//permite que toda a tela seja rolada para cima
+        // e para baixo quando o conteudo é maior que o espaço disponivel
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
