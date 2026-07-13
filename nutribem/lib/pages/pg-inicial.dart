@@ -30,7 +30,7 @@ class _HomePageState extends State<HomePage> {
   static const double _metaCarbs = 250;
   static const double _metaProteina = 120;
   static const double _metaGordura = 65;
-  static const double _metaAgua = 2.0;
+  static const double _metaAgua = 2000;
 
   /// CICLO DE VIDA: 'initState' é o primeiro método executado quando a tela nasce.
   @override
@@ -342,7 +342,7 @@ class _HomePageState extends State<HomePage> {
         const SizedBox(width: 10),
         Expanded(child: _buildStatCard('$_totalRefeicoes', 'Refeições', Icons.restaurant, Colors.grey)),
         const SizedBox(width: 10),
-        Expanded(child: _buildStatCard('${_totalAgua.toStringAsFixed(1)} L', 'Água', Icons.water_drop, Colors.blue)),
+        Expanded(child: _buildStatCard('${_totalAgua.toStringAsFixed(1)} ml', 'Água', Icons.water_drop, Colors.blue)),
       ],
     );
   }
