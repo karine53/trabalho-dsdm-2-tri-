@@ -1,7 +1,4 @@
-// Classe responsável por armazenar o resumo nutricional diário do usuário.
-//
-// Os valores representam a soma de todos os nutrientes registrados
-// nas refeições cadastradas em uma determinada data.
+
 class ResumoNutricional {
 
   // Quantidade total de calorias consumidas.
@@ -45,6 +42,10 @@ class ResumoNutricional {
 
         // Recupera o total de calorias consumidas.
         totalCalorias: (map['totalCalorias'] as num? ?? 0).toDouble(),
+        // as num diz que o valor deve ser tratado como um numero
+        // ? que pode ser nulo,
+        //?? mas se existir o num usa ele 
+        //double transforma em decimal para armazenar 
 
         // Recupera o total de carboidratos consumidos.
         totalCarbs: (map['totalCarbs'] as num? ?? 0).toDouble(),

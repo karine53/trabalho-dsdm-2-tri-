@@ -1,8 +1,7 @@
 // Classe que representa uma refeição cadastrada no aplicativo.
 class Refeicao {
 
-  // Identificador único da refeição no banco de dados.
-  // É opcional porque o banco gera esse valor automaticamente.
+  //da um id pra refeiçao(pode ser nulo)
   final int? id;
 
   // Nome da refeição ou alimento.
@@ -15,10 +14,9 @@ class Refeicao {
   final String? tipo;
 
   // Categoria nutricional da refeição
-  // (Ex.: Proteína, Vegetal ou Carboidrato).
   final String? categoria;
 
-  // Quantidade de calorias da refeição.
+  // Quantidade de calorias da refeição, nao pode ser nulo
   final double calorias;
 
   // Quantidade de carboidratos (em gramas).
@@ -40,6 +38,8 @@ class Refeicao {
   final String? horario;
 
   // Construtor da classe.
+  //aq cria uma classe que ira receber nome descriçao etc,
+  // se nao for colocado nenhum valor ele sera 0 
   const Refeicao({
     this.id,
     required this.nome,
@@ -55,8 +55,9 @@ class Refeicao {
     this.horario,
   });
 
-  // Converte o objeto Refeicao em um Map.
-  // Esse formato é utilizado para salvar os dados no banco SQLite.
+  // transforme o objeto em um formato que o sqlite entende 
+  // pq o sqlite trabalha com tabelas e o map representa uma linha dessa tabela 
+
   Map<String, dynamic> toMap() => {
         if (id != null) 'id': id,
         'nome': nome,
@@ -74,6 +75,7 @@ class Refeicao {
 
   // Cria um objeto Refeicao a partir de um Map
   // recebido do banco de dados.
+  //pega o que foi recebido do banco em map e transforma pra objeto 
   factory Refeicao.fromMap(Map<String, dynamic> map) => Refeicao(
         id: map['id'] as int?,
         nome: map['nome'] as String,
@@ -89,9 +91,7 @@ class Refeicao {
         horario: map['horario'] as String?,
       );
 
-  // Retorna uma nova instância da classe permitindo
-  // alterar apenas os atributos desejados, mantendo
-  // os demais valores inalterados.
+  // permite vc alterar os valores depois de criado 
   Refeicao copyWith({
     int? id,
     String? nome,
