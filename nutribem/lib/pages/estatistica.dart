@@ -197,7 +197,7 @@ class _EstatisticasPageState extends State<EstatisticasPage> {
   
       body: _carregando
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF1B5E20)), // mostra um circulo carregano a pg 
+              child: CircularProgressIndicator(color: Color(0xFF1B5E20)), // mostra um circulo carregano a pg enquanto os dados estao sendo carregados 
             ) 
           : SingleChildScrollView( // permite rolar a pg se tiver muito conteudo 
             // terminou de carregar e mostra a tela 
@@ -208,7 +208,7 @@ class _EstatisticasPageState extends State<EstatisticasPage> {
                   // ── NAVEGAÇÃO ENTRE SEMANAS ───────────────────────────────────────
                   // Permite ao usuário ir para a semana anterior ou próxima.
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween, // deixa os elementos um do lado do outro mas mais espaçado 
                     children: [
                       IconButton(
                         icon: const Icon(
@@ -217,7 +217,7 @@ class _EstatisticasPageState extends State<EstatisticasPage> {
                         onPressed: () {
                           setState(
                             () => _offsetSemana--,
-                          ); // Decrementa o offset.
+                          ); // atualiza o valor do deslocamento da semana 
                           _carregarDados(); // Recarrega os dados para a nova semana.
                         },
                       ),
@@ -267,16 +267,18 @@ class _EstatisticasPageState extends State<EstatisticasPage> {
 
   /// [buildPontuacaoCard] constrói o card que exibe a pontuação semanal e as estrelas.
   Widget _buildPontuacaoCard() {
-    // Calcula o número de estrelas com base na pontuação (cada estrela = 20 pontos).
-    int estrelas = (_pontuacaoSemanal / 20).round().clamp(0, 5);
-
-    return Card(
+    
+    int estrelas = (_pontuacaoSemanal / 20) //pega a pontuaçao e divide por 20 pq cada estrela vale 20 pontos 
+    .round() // arrenda o numero 
+    .clamp(0, 5); //limita para ser no maximo ate 5
+    return Card( // o metodo retorna um card 
       color: const Color(0xFF1B5E20), // Cor de fundo do card.
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(// define o formato do card 
+        borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start, //alinha todos os widgets a esquerda 
           children: [
             const Text(
               'Pontuação de Saúde', // Título do card.
@@ -297,12 +299,13 @@ class _EstatisticasPageState extends State<EstatisticasPage> {
                   ' /100', // Pontuação máxima.
                   style: TextStyle(color: Colors.white60, fontSize: 20),
                 ),
-                const Spacer(), // Empurra as estrelas para a direita.
+                const Spacer(), // Empurra as estrelas para a direita. spacer ocupa todo o espaço vazio da tela 
                 Row(
                   children: List.generate(5, (index) {
                     return Icon(
                       // Se o índice for menor que o número de estrelas, mostra estrela cheia, senão, vazia.
-                      index < estrelas ? Icons.star : Icons.star_border,
+                      index < estrelas ? Icons.star // mostra a estrela cheia 
+                       : Icons.star_border, //mostra a estrela vazia 
                       color: index < estrelas
                           ? Colors.amber
                           : Colors.white30, // Cor da estrela.
@@ -315,8 +318,8 @@ class _EstatisticasPageState extends State<EstatisticasPage> {
             Text(
               // Mensagem dinâmica baseada na pontuação.
               _pontuacaoSemanal > 50
-                  ? 'Bom desempenho! Continue assim.'
-                  : 'Registre mais refeições para pontuar.',
+                  ? 'Bom desempenho! Continue assim.' // se for maior que 50 :-> se for verdadeira 
+                  : 'Registre mais refeições para pontuar.', // caso contrario ?-> caso ao contrario 
               style: const TextStyle(color: Colors.white60, fontSize: 12),
             ),
           ],
@@ -329,7 +332,7 @@ class _EstatisticasPageState extends State<EstatisticasPage> {
   Widget _buildConsumoCaloricoCard() {
     return Card(
       elevation: 0,
-      shape: RoundedRectangleBorder(
+      shape: RoundedRectangleBorder( //define o formato do cartao
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(color: Colors.grey.shade200),
       ),
@@ -343,16 +346,16 @@ class _EstatisticasPageState extends State<EstatisticasPage> {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             Text(
-              'Média: ${NumberFormat('#,###', 'pt_BR').format(_consumoMedioCalorico.round())} kcal/dia',
+              'Média: ${NumberFormat('#,###', 'pt_BR').format(_consumoMedioCalorico.round())} kcal/dia', //formata para o padrao brasileiro depois arredonda o consumo medio
               style: TextStyle(color: Colors.grey[500], fontSize: 12),
             ),
             const SizedBox(height: 25),
             SizedBox(
               height: 120,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: List.generate(7, (index) {
+                mainAxisAlignment: MainAxisAlignment.spaceBetween, // distribui igualmente as barras 
+                crossAxisAlignment: CrossAxisAlignment.end, //alinha todas as barras pela parte inferior, assim elas descem para cima 
+                children: List.generate(7, (index) { //cria 7 barras
                   final dias = [
                     'Seg',
                     'Ter',
@@ -363,24 +366,27 @@ class _EstatisticasPageState extends State<EstatisticasPage> {
                     'Dom',
                   ];
                   // Encontra o valor máximo para escalar as barras do gráfico.
-                  double maxVal = _consumoDiario.reduce(
-                    (a, b) => a > b ? a : b,
+                  double maxVal  //cria uma variavel
+                  = _consumoDiario.reduce( // o metodo redece percorre toda a lista procurando o maior valor 
+                    (a, b) => a > b ? a : b, // compara os dois valores, se a for maior retorna a caso contrario retorna b 
                   );
                   // Se não houver dados, define um valor base para evitar divisão por zero e barras invisíveis.
-                  if (maxVal == 0) maxVal = 1000;
+                  if (maxVal == 0) maxVal = 1000; //verifica se ninguem registrou as refeiçao ai define um valor padrao 
                   // Calcula a altura da barra proporcionalmente ao valor máximo.
-                  double heightFactor = (_consumoDiario[index] / maxVal).clamp(
-                    0.05,
-                    1.0,
+                  double heightFactor = (_consumoDiario[index] / maxVal)// pega o consumo daquele dia e divide pelo maior valor encontrado 
+                  .clamp(  //limita o valor 
+                    0.05, // nunca menor que 5%
+                    1.0, //nunca maior que 100%
                   ); // Garante altura mínima.
-                  bool temDados = _consumoDiario[index] > 0;
+                  bool temDados =  /// cria uma variavel booleana 
+                  _consumoDiario[index] > 0; // se o consumo for maior que 0 tem dados  verdadeiros 
 
                   return Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.end, 
                     children: [
                       if (temDados) // Mostra o valor apenas se houver dados para o dia.
                         Text(
-                          '${_consumoDiario[index].round()}',
+                          '${_consumoDiario[index].round()}', // mostra as calorias daquele dia 
                           style: const TextStyle(
                             color: Color(0xFF1B5E20),
                             fontSize: 9,
@@ -428,10 +434,10 @@ class _EstatisticasPageState extends State<EstatisticasPage> {
       {'nome': 'Vegetal', 'emoji': '🥦', 'cor': Colors.green},
     ];
 
-    return Column(
-      children: categorias.map((cat) {
+    return Column( // cat representa cada elemento da lista 
+      children: categorias.map((cat) { //percorre todos os elementos a lista 
         double percent =
-            _categoriasConsumidas[cat['nome']] ??
+            _categoriasConsumidas[cat['nome']] ?? //procura o percentual correspondente 
             0; // Pega o percentual calculado.
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
@@ -449,9 +455,9 @@ class _EstatisticasPageState extends State<EstatisticasPage> {
                   style: const TextStyle(fontSize: 20),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
+                Expanded( // faz a parte central ocupar todo o espaço disponivel
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start, //alinha tudo a esquerda 
                     children: [
                       Text(
                         cat['nome'] as String,
@@ -461,14 +467,14 @@ class _EstatisticasPageState extends State<EstatisticasPage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      ClipRRect(
+                      ClipRRect( //recorta os cantos da barra
                         borderRadius: BorderRadius.circular(10),
                         child: LinearProgressIndicator(
                           value:
                               percent / 100, // Valor do progresso (0.0 a 1.0).
                           backgroundColor: Colors.grey.shade100,
                           color: cat['cor'] as Color,
-                          minHeight: 6,
+                          minHeight: 6, //altura minima
                         ),
                       ),
                     ],
@@ -486,7 +492,7 @@ class _EstatisticasPageState extends State<EstatisticasPage> {
             ),
           ),
         );
-      }).toList(),
+      }).toList(),// transforma os widgets em uma lista que a column consegue exibir 
     );
   }
 
@@ -505,16 +511,16 @@ class _EstatisticasPageState extends State<EstatisticasPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Total de Refeições ${_getTextoPeriodo().toLowerCase()}',
+                'Total de Refeições ${_getTextoPeriodo().toLowerCase()}', //retorna o periodo selecionado e o toLowe converte o texto para letras minusculas
                 style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
               const SizedBox(height: 10),
               Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
+                crossAxisAlignment: CrossAxisAlignment.baseline, //alinha os textos pela linha base das letras 
+                textBaseline: TextBaseline.alphabetic, //informa que o alinhamento sera feito usando a base do alfabeto 
                 children: [
                   Text(
-                    '$_totalRefeicoesSemana',
+                    '$_totalRefeicoesSemana', //mostra o numero de refeiçoes registradas 
                     style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
