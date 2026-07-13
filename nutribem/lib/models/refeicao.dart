@@ -1,17 +1,45 @@
+// Classe que representa uma refeição cadastrada no aplicativo.
 class Refeicao {
-  final int? id;
-  final String nome;
-  final String? descricao;
-  final String? tipo; // 'Café da Manhã', 'Almoço', 'Lanche', 'Jantar', 'Ceia'
-  final String? categoria; // 'Proteína', 'Vegetal', 'Carboidrato' (chip exibido no histórico)
-  final double calorias;
-  final double carbs;
-  final double proteina;
-  final double gordura;
-  final double agua; // em litros
-  final String data; // 'yyyy-MM-dd'
-  final String? horario; // 'HH:mm'
 
+  // Identificador único da refeição no banco de dados.
+  // É opcional porque o banco gera esse valor automaticamente.
+  final int? id;
+
+  // Nome da refeição ou alimento.
+  final String nome;
+
+  // Descrição opcional da refeição.
+  final String? descricao;
+
+  // Tipo da refeição (Ex.: Café da Manhã, Almoço, Lanche, Jantar ou Ceia).
+  final String? tipo;
+
+  // Categoria nutricional da refeição
+  // (Ex.: Proteína, Vegetal ou Carboidrato).
+  final String? categoria;
+
+  // Quantidade de calorias da refeição.
+  final double calorias;
+
+  // Quantidade de carboidratos (em gramas).
+  final double carbs;
+
+  // Quantidade de proteínas (em gramas).
+  final double proteina;
+
+  // Quantidade de gorduras (em gramas).
+  final double gordura;
+
+  // Quantidade de água consumida (em litros).
+  final double agua;
+
+  // Data da refeição no formato yyyy-MM-dd.
+  final String data;
+
+  // Horário da refeição no formato HH:mm.
+  final String? horario;
+
+  // Construtor da classe.
   const Refeicao({
     this.id,
     required this.nome,
@@ -27,36 +55,43 @@ class Refeicao {
     this.horario,
   });
 
+  // Converte o objeto Refeicao em um Map.
+  // Esse formato é utilizado para salvar os dados no banco SQLite.
   Map<String, dynamic> toMap() => {
-    if (id != null) 'id': id,
-    'nome': nome,
-    'descricao': descricao,
-    'tipo': tipo,
-    'categoria': categoria,
-    'calorias': calorias,
-    'carbs': carbs,
-    'proteina': proteina,
-    'gordura': gordura,
-    'agua': agua,
-    'data': data,
-    'horario': horario,
-  };
+        if (id != null) 'id': id,
+        'nome': nome,
+        'descricao': descricao,
+        'tipo': tipo,
+        'categoria': categoria,
+        'calorias': calorias,
+        'carbs': carbs,
+        'proteina': proteina,
+        'gordura': gordura,
+        'agua': agua,
+        'data': data,
+        'horario': horario,
+      };
 
+  // Cria um objeto Refeicao a partir de um Map
+  // recebido do banco de dados.
   factory Refeicao.fromMap(Map<String, dynamic> map) => Refeicao(
-    id: map['id'] as int?,
-    nome: map['nome'] as String,
-    descricao: map['descricao'] as String?,
-    tipo: map['tipo'] as String?,
-    categoria: map['categoria'] as String?,
-    calorias: (map['calorias'] as num).toDouble(),
-    carbs: (map['carbs'] as num? ?? 0).toDouble(),
-    proteina: (map['proteina'] as num? ?? 0).toDouble(),
-    gordura: (map['gordura'] as num? ?? 0).toDouble(),
-    agua: (map['agua'] as num? ?? 0).toDouble(),
-    data: map['data'] as String,
-    horario: map['horario'] as String?,
-  );
+        id: map['id'] as int?,
+        nome: map['nome'] as String,
+        descricao: map['descricao'] as String?,
+        tipo: map['tipo'] as String?,
+        categoria: map['categoria'] as String?,
+        calorias: (map['calorias'] as num).toDouble(),
+        carbs: (map['carbs'] as num? ?? 0).toDouble(),
+        proteina: (map['proteina'] as num? ?? 0).toDouble(),
+        gordura: (map['gordura'] as num? ?? 0).toDouble(),
+        agua: (map['agua'] as num? ?? 0).toDouble(),
+        data: map['data'] as String,
+        horario: map['horario'] as String?,
+      );
 
+  // Retorna uma nova instância da classe permitindo
+  // alterar apenas os atributos desejados, mantendo
+  // os demais valores inalterados.
   Refeicao copyWith({
     int? id,
     String? nome,

@@ -1,10 +1,21 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Permissões essenciais para notificações -->
+    <!-- 1. DECLARAÇÃO DE PERMISSÕES -->
+    
+    <!-- Permite que o app mostre notificações na barra de status (Obrigatório no Android 13+). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    
+    <!-- Permite agendar alarmes que tocam no segundo exato (Obrigatório no Android 12+). -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    
+    <!-- Uma permissão mais forte para alarmes exatos, usada para garantir que o sistema não bloqueie o app. -->
     <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+    
+    <!-- Permite que o app saiba quando o celular foi ligado/reiniciado. 
+         Isso é vital para re-agendar as notificações que o sistema apaga ao desligar. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    
+    <!-- Permite que o celular vibre quando a notificação chegar. -->
     <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
@@ -12,6 +23,7 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
+        <!-- 2. CONFIGURAÇÃO DA ATIVIDADE PRINCIPAL (A TELA DO APP) -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -22,10 +34,13 @@
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
 
+            <!-- Define o tema que aparece enquanto o Flutter está carregando (Splash Screen). -->
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme" />
 
+            <!-- Filtro de Intenção: Diz ao Android que esta é a tela que deve abrir 
+                 quando o usuário toca no ícone do app no menu. -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -34,18 +49,26 @@
         </activity>
 
 
-        <!-- Configuração do flutter_local_notifications -->
+        <!-- 3. COMPONENTES DE SEGUNDO PLANO (RECEIVERS) -->
+        
+        <!-- Este Receiver é o "ouvido" do plugin de notificações. 
+             Ele recebe o sinal do sistema Android quando chega a hora de mostrar um alerta. -->
         <receiver
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
             android:exported="false" />
 
+        <!-- Este Receiver é ativado assim que o celular termina de ligar (Boot). 
+             Ele avisa ao plugin para olhar o banco de dados e agendar tudo de novo. -->
         <receiver
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
             android:exported="false">
 
             <intent-filter>
+                <!-- Ouve o sinal de "Celular Ligado" -->
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <!-- Ouve o sinal de "App Atualizado" -->
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <!-- Compatibilidade com inicialização rápida de alguns fabricantes (HTC, etc) -->
                 <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
             </intent-filter>
@@ -53,6 +76,7 @@
         </receiver>
 
 
+        <!-- Informa ao Android que estamos usando a versão 2 do motor do Flutter. -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
@@ -60,6 +84,8 @@
     </application>
 
 
+    <!-- 4. VISIBILIDADE DE PACOTES -->
+    <!-- Permite que o Flutter interaja com outros recursos do sistema, como seleção de texto. -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>

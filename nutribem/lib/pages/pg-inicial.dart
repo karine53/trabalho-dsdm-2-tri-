@@ -17,8 +17,14 @@ import '../models/resumo_nutricional.dart';
 // botão "+ Adicionar Refeição" ou em algum card existente.
 import '../pages/adicionar_refeicao.dart';
 
+<<<<<<< Updated upstream
 // Widget "casca" da tela inicial (Home). Delega toda a lógica e estado
 // pra classe _HomePageState logo abaixo.
+=======
+/// PÁGINA HOME (ESTADO INICIAL DO APP)
+/// O 'StatefulWidget' é usado porque esta tela precisa se redesenhar 
+/// sempre que os dados mudam (ex: quando você adiciona uma refeição).
+>>>>>>> Stashed changes
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -29,6 +35,7 @@ class HomePage extends StatefulWidget {
 // Classe que guarda o estado da Home: quais dados estão carregados, se
 // está carregando, qual data está sendo visualizada, etc.
 class _HomePageState extends State<HomePage> {
+<<<<<<< Updated upstream
 
   // Atalho pra instância única do banco de dados.
   final DatabaseHelper _db = DatabaseHelper.instance;
@@ -51,12 +58,25 @@ class _HomePageState extends State<HomePage> {
   // progresso (quanto falta pra bater a meta do dia). "static const"
   // significa que são compartilhados por todas as instâncias da classe
   // e nunca mudam durante a execução.
+=======
+  // Instância do banco de dados (usando o padrão Singleton para ter uma conexão única).
+  final DatabaseHelper _db = DatabaseHelper.instance;
+
+  // VARIÁVEIS DE ESTADO
+  DateTime _dataSelecionada = DateTime.now(); // Controla o dia exibido (padrão: hoje).
+  ResumoNutricional? _resumo;                // Objeto que contém a soma de calorias e macros.
+  List<Refeicao> _refeicoes = [];            // Lista dinâmica das refeições cadastradas.
+  bool _carregando = true;                   // Controla a exibição do indicador de progresso.
+
+  // METAS DIÁRIAS (Constantes usadas para os cálculos de progresso).
+>>>>>>> Stashed changes
   static const double _metaCalorias = 2000;
   static const double _metaCarbs = 250;
   static const double _metaProteina = 120;
   static const double _metaGordura = 65;
   static const double _metaAgua = 2.0;
 
+<<<<<<< Updated upstream
   // Chamado automaticamente uma vez, quando a tela é criada.
   @override
   void initState() {
@@ -81,6 +101,26 @@ class _HomePageState extends State<HomePage> {
       final dataStr = DateFormat('yyyy-MM-dd').format(_dataSelecionada);
 
       // Busca a lista de refeições daquele dia...
+=======
+  /// CICLO DE VIDA: 'initState' é o primeiro método executado quando a tela nasce.
+  @override
+  void initState() {
+    super.initState();
+    _carregarDados(); // Busca os dados no banco assim que abre o app.
+  }
+
+  /// BUSCA DE DADOS NO BANCO (SQLite)
+  /// Usamos 'async' porque a leitura de arquivos/banco é demorada e não pode travar a UI.
+  Future<void> _carregarDados() async {
+    if (!mounted) return; // Segurança: evita atualizar a tela se o usuário já saiu dela.
+    setState(() => _carregando = true); // Inicia a animação de carregamento.
+    
+    try {
+      // Formata a data para String (YYYY-MM-DD) para filtrar no SQL.
+      final dataStr = DateFormat('yyyy-MM-dd').format(_dataSelecionada);
+      
+      // 'await' espera a resposta do banco antes de continuar.
+>>>>>>> Stashed changes
       final refeicoes = await _db.getRefeicoesPorData(dataStr);
       // ...e os totais nutricionais somados daquele mesmo dia.
       final resumo = await _db.getResumoNutricional(dataStr);
@@ -92,7 +132,7 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           _refeicoes = refeicoes;
           _resumo = resumo;
-          _carregando = false;
+          _carregando = false; // Para a animação de carregamento.
         });
       }
     } catch (e) {
@@ -106,6 +146,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+<<<<<<< Updated upstream
   // Abre o seletor de data nativo, pra o usuário escolher ver outro dia
   // além de hoje.
   Future<void> _selecionarData() async {
@@ -115,6 +156,15 @@ class _HomePageState extends State<HomePage> {
       firstDate: DateTime(2024),     // não deixa escolher datas antes de 2024
       lastDate: DateTime.now(),      // não deixa escolher datas futuras
       // Personaliza a cor do calendário pra combinar com o app (verde).
+=======
+  /// SELETOR DE DATA (Calendário)
+  Future<void> _selecionarData() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dataSelecionada,
+      firstDate: DateTime(2024),
+      lastDate: DateTime.now(), // Não permite selecionar datas futuras.
+>>>>>>> Stashed changes
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: const ColorScheme.light(primary: Color(0xFF1B5E20)),
@@ -122,9 +172,13 @@ class _HomePageState extends State<HomePage> {
         child: child!,
       ),
     );
+<<<<<<< Updated upstream
 
     // Se o usuário escolheu uma data (não cancelou) e ela é diferente
     // da que já estava selecionada...
+=======
+    // Se o usuário escolheu uma data e ela é diferente da atual, recarrega tudo.
+>>>>>>> Stashed changes
     if (picked != null && picked != _dataSelecionada) {
       // ...atualiza a data selecionada e busca os dados desse novo dia.
       setState(() => _dataSelecionada = picked);
@@ -132,13 +186,19 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+<<<<<<< Updated upstream
   // Abre a página de adicionar refeição (sem passar nenhuma refeição
   // existente, então ela abre em modo "criar nova").
+=======
+  /// NAVEGAÇÃO: Ir para a tela de adicionar refeição.
+>>>>>>> Stashed changes
   Future<void> _adicionarRefeicao() async {
+    // Navigator.push abre a nova tela e o '.then' ou 'await' espera o retorno.
     final resultado = await Navigator.push<bool>(
       context,
       MaterialPageRoute(builder: (_) => const AdicionarRefeicaoPage()),
     );
+<<<<<<< Updated upstream
     // Se a página sinalizou que algo foi salvo, recarrega a Home pra
     // mostrar a refeição nova na lista.
     if (resultado == true) _carregarDados();
@@ -146,6 +206,13 @@ class _HomePageState extends State<HomePage> {
 
   // Abre a página de adicionar refeição, mas em modo "editar", passando
   // a refeição que deve ser alterada.
+=======
+    // Se a tela de adicionar retornar 'true', significa que algo foi salvo.
+    if (resultado == true) _carregarDados();
+  }
+
+  /// EDIÇÃO: Abre a tela de cadastro preenchida com os dados da refeição selecionada.
+>>>>>>> Stashed changes
   Future<void> _editarRefeicao(Refeicao refeicao) async {
     final resultado = await Navigator.push<bool>(
       context,
@@ -156,7 +223,11 @@ class _HomePageState extends State<HomePage> {
     if (resultado == true) _carregarDados();
   }
 
+<<<<<<< Updated upstream
   // Mostra um popup de confirmação e, se aceito, apaga a refeição.
+=======
+  /// EXCLUSÃO: Diálogo de confirmação.
+>>>>>>> Stashed changes
   Future<void> _excluirRefeicao(Refeicao refeicao) async {
     final confirmar = await showDialog<bool>(
       context: context,
@@ -182,9 +253,14 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+<<<<<<< Updated upstream
   // ── Getter que formata a data selecionada pra exibir no cabeçalho ──────────
   // Mostra "Hoje"/"Ontem" de forma amigável, ou a data por extenso pros
   // demais dias (ex: "Sex, 10 Jul 2026").
+=======
+  /// LÓGICA DE FORMATAÇÃO DE DATA
+  /// Retorna "Ontem", "Hoje" ou a data formatada em português.
+>>>>>>> Stashed changes
   String get _dataFormatada {
     try {
       final hoje = DateTime.now();
@@ -208,14 +284,19 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+<<<<<<< Updated upstream
   // ── Getters de conveniência pros totais do resumo ───────────────────────────
   // Cada um devolve o valor somado do dia, ou 0 se o resumo ainda não
   // foi carregado (evita erro de "usar null" espalhado pela tela toda).
+=======
+  // GETTERS: Facilitam o acesso aos dados do resumo nutricional.
+>>>>>>> Stashed changes
   double get _totalCalorias => _resumo?.totalCalorias ?? 0;
   double get _totalCarbs    => _resumo?.totalCarbs    ?? 0;
   double get _totalProteina => _resumo?.totalProteina ?? 0;
   double get _totalGordura  => _resumo?.totalGordura  ?? 0;
   double get _totalAgua     => _resumo?.totalAgua     ?? 0;
+<<<<<<< Updated upstream
 
   // Quantidade de refeições cadastradas no dia.
   int get _totalRefeicoes => _refeicoes.length;
@@ -225,10 +306,18 @@ class _HomePageState extends State<HomePage> {
   double get _pontuacao => ((_totalCalorias / _metaCalorias) * 100).clamp(0, 100);
 
   // ── BUILD ────────────────────────────────────────────────────────────────
+=======
+  int    get _totalRefeicoes => _refeicoes.length;
+  // Calcula a pontuação baseada na meta de calorias (máximo 100%).
+  double get _pontuacao => ((_totalCalorias / _metaCalorias) * 100).clamp(0, 100);
+
+  /// MÉTODO BUILD: Constrói a interface visual da tela.
+>>>>>>> Stashed changes
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
+      // RefreshIndicator: Permite puxar a tela para baixo para atualizar os dados.
       body: RefreshIndicator(
         // Permite "puxar pra baixo" pra recarregar os dados manualmente.
         color: const Color(0xFF1B5E20),
@@ -239,12 +328,18 @@ class _HomePageState extends State<HomePage> {
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
+<<<<<<< Updated upstream
               // Cabeçalho verde com saudação, busca e seletor de data.
               _buildHeader(),
 
               // Transform.translate "puxa" esse bloco pra cima, fazendo
               // o card de resumo se sobrepor à parte de baixo do
               // cabeçalho verde (efeito visual de "cartão flutuante").
+=======
+              _buildHeader(), // Cabeçalho verde.
+              
+              // Transform.translate move os cards para cima do cabeçalho.
+>>>>>>> Stashed changes
               Transform.translate(
                 offset: const Offset(0, -30),
                 child: Padding(
@@ -256,18 +351,23 @@ class _HomePageState extends State<HomePage> {
                         )
                       : Column(
                           children: [
-                            _buildResumoNutricional(),
+                            _buildResumoNutricional(), // Card principal.
                             const SizedBox(height: 10),
-                            _buildMacros(),
+                            _buildMacros(),            // Barras de Carb, Prot e Gordura.
                             const SizedBox(height: 15),
-                            _buildEstatisticas(),
+                            _buildEstatisticas(),      // Estrelas e Água.
                           ],
                         ),
                 ),
               ),
+<<<<<<< Updated upstream
 
               // Lista de refeições do dia, com cabeçalho e botão de
               // adicionar logo abaixo.
+=======
+              
+              // Seção de listagem de refeições.
+>>>>>>> Stashed changes
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
@@ -280,8 +380,12 @@ class _HomePageState extends State<HomePage> {
                     if (!_carregando && _refeicoes.isEmpty)
                       _buildEstadoVazio()
                     else
+<<<<<<< Updated upstream
                       ..._refeicoes.map((r) => _buildMealCard(r)),
 
+=======
+                      ..._refeicoes.map((r) => _buildMealCard(r)), // Cria um card para cada refeição.
+>>>>>>> Stashed changes
                     const SizedBox(height: 20),
                     _buildBotaoAdicionar(),
                     const SizedBox(height: 20),
@@ -295,9 +399,13 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+<<<<<<< Updated upstream
   // --- WIDGETS DO HEADER ---
   // Cabeçalho verde no topo da tela, com cantos arredondados embaixo,
   // saudação, botão de busca e o seletor de data.
+=======
+  // --- WIDGETS DO HEADER (TOPO VERDE) ---
+>>>>>>> Stashed changes
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
@@ -331,9 +439,13 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           const SizedBox(height: 10),
+<<<<<<< Updated upstream
 
           // "Pílula" clicável mostrando a data atual — toca pra abrir
           // o seletor de data.
+=======
+          // Botão de seleção de data (Calendário).
+>>>>>>> Stashed changes
           GestureDetector(
             onTap: _selecionarData,
             child: Container(
@@ -354,12 +466,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+<<<<<<< Updated upstream
   // --- WIDGETS DE RESUMO ---
   // Card grande mostrando o total de calorias do dia, a meta, e uma
   // barra de progresso visual.
   Widget _buildResumoNutricional() {
     // Calcula o progresso (0.0 a 1.0) em relação à meta de calorias,
     // travando em 1.0 no máximo pra barra nunca "estourar" visualmente.
+=======
+  // --- WIDGETS DE RESUMO (CARD PRINCIPAL) ---
+  Widget _buildResumoNutricional() {
+    // Calcula o valor da barra de progresso (de 0.0 a 1.0).
+>>>>>>> Stashed changes
     final prog = (_totalCalorias / _metaCalorias).clamp(0.0, 1.0);
 
     return Card(
@@ -405,13 +523,17 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             const SizedBox(height: 10),
+<<<<<<< Updated upstream
 
             // Barra de progresso: fica vermelha se passou da meta
             // (prog >= 1.0), verde enquanto ainda não bateu.
+=======
+            // Barra de progresso visual.
+>>>>>>> Stashed changes
             LinearProgressIndicator(
               value: prog,
               backgroundColor: const Color(0xFFE0E0E0),
-              color: prog >= 1.0 ? Colors.red : const Color(0xFF4CAF50),
+              color: prog >= 1.0 ? Colors.red : const Color(0xFF4CAF50), // Fica vermelho se bater a meta.
               minHeight: 8,
               borderRadius: const BorderRadius.all(Radius.circular(10)),
             ),
@@ -421,8 +543,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+<<<<<<< Updated upstream
   // Linha com os 3 cards de macronutrientes (carboidrato, proteína,
   // gordura), cada um ocupando um terço igual da largura (Expanded).
+=======
+  // Linha com os três cards de macronutrientes.
+>>>>>>> Stashed changes
   Widget _buildMacros() {
     return Row(
       children: [
@@ -435,8 +561,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+<<<<<<< Updated upstream
   // Linha com os 3 cards de estatísticas gerais: pontuação, número de
   // refeições e total de água bebida.
+=======
+  // Linha com pontuação, contador de refeições e água.
+>>>>>>> Stashed changes
   Widget _buildEstatisticas() {
     return Row(
       children: [
@@ -450,8 +580,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+<<<<<<< Updated upstream
   // Título "Refeições de Hoje" + botão "Ver todas" (ainda sem ação
   // definida — provavelmente deveria navegar pro Histórico).
+=======
+  // Cabeçalho da lista de refeições.
+>>>>>>> Stashed changes
   Widget _buildCabecalhoRefeicoes() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -462,8 +596,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+<<<<<<< Updated upstream
   // Card de uma refeição na lista da Home (mais simples que o card do
   // Histórico — usa ListTile pronto em vez de montar tudo manualmente).
+=======
+  // Card individual de cada refeição na lista.
+>>>>>>> Stashed changes
   Widget _buildMealCard(Refeicao r) {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
@@ -477,16 +615,38 @@ class _HomePageState extends State<HomePage> {
           child: Icon(Icons.restaurant, color: Colors.green[700]),
         ),
         title: Text(r.nome, style: const TextStyle(fontWeight: FontWeight.bold)),
+<<<<<<< Updated upstream
         // "??" garante que nunca tenta mostrar "null" como texto, caso
         // a descrição não tenha sido preenchida.
         subtitle: Text(r.descricao ?? ''),
+=======
+        subtitle: Text(r.descricao ?? 'Sem descrição'),
+>>>>>>> Stashed changes
         trailing: Text('${r.calorias.round()} kcal', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
       ),
     );
   }
 
+<<<<<<< Updated upstream
   // Card pequeno de um macronutriente: nome, valor e barrinha de
   // progresso colorida.
+=======
+  // Widget exibido quando não há refeições cadastradas.
+  Widget _buildEstadoVazio() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      child: Column(
+        children: [
+          Icon(Icons.restaurant_menu, size: 64, color: Colors.grey[300]),
+          const SizedBox(height: 16),
+          Text('Nenhuma refeição registrada hoje.', style: TextStyle(color: Colors.grey[500])),
+        ],
+      ),
+    );
+  }
+
+  // Widget reutilizável para os cards de macros (Carb/Prot/Gord).
+>>>>>>> Stashed changes
   Widget _buildMacroCard(String label, String value, Color color, double progress) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -504,8 +664,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+<<<<<<< Updated upstream
   // Card pequeno de uma estatística genérica: ícone, valor grande e
   // rótulo pequeno embaixo. Reaproveitado pra pontuação, refeições e água.
+=======
+  // Widget reutilizável para os cards de estatísticas (Estrela/Água).
+>>>>>>> Stashed changes
   Widget _buildStatCard(String value, String label, IconData icon, Color color) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -523,8 +687,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+<<<<<<< Updated upstream
   // Botão verde grande no final da lista, que abre a tela de adicionar
   // uma nova refeição.
+=======
+  // Botão grande na parte inferior para adicionar nova refeição.
+>>>>>>> Stashed changes
   Widget _buildBotaoAdicionar() {
     return SizedBox(
       width: double.infinity, // ocupa toda a largura disponível
@@ -540,6 +708,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+<<<<<<< Updated upstream
 
   // Mensagem exibida quando o dia selecionado não tem nenhuma refeição
   // cadastrada ainda.
@@ -556,3 +725,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+=======
+}
+>>>>>>> Stashed changes

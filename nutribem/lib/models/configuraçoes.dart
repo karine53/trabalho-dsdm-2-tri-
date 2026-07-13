@@ -1,13 +1,32 @@
+// Classe responsável por armazenar as configurações do aplicativo.
 class AppSettings {
+
+  // Identificador das configurações no banco de dados.
+  // Como existe apenas um conjunto de configurações, o valor padrão é 1.
   final int? id;
+
+  // Define se as notificações do aplicativo estão ativadas.
   bool notificationsEnabled;
+
+  // Define se os lembretes para beber água estão ativados.
   bool waterReminderEnabled;
+
+  // Define se o resumo diário das refeições será enviado.
   bool dailySummaryEnabled;
+
+  // Horário configurado para o café da manhã.
   String breakfastTime;
+
+  // Horário configurado para o almoço.
   String lunchTime;
+
+  // Horário configurado para o lanche.
   String snackTime;
+
+  // Horário configurado para o jantar.
   String dinnerTime;
 
+  // Construtor da classe com valores padrão.
   AppSettings({
     this.id = 1,
     this.notificationsEnabled = true,
@@ -19,6 +38,8 @@ class AppSettings {
     this.dinnerTime = '19:00',
   });
 
+  // Converte o objeto AppSettings em um Map.
+  // Esse formato é utilizado para salvar os dados no banco SQLite.
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -32,6 +53,8 @@ class AppSettings {
     };
   }
 
+  // Cria um objeto AppSettings a partir dos dados
+  // recuperados do banco de dados.
   factory AppSettings.fromMap(Map<String, dynamic> map) {
     return AppSettings(
       id: map['id'],
@@ -45,23 +68,69 @@ class AppSettings {
     );
   }
 
+    // Método responsável por criar uma nova cópia do objeto AppSettings.
+  //
+  // O método copyWith permite alterar apenas as configurações desejadas,
+  // mantendo todas as demais iguais às do objeto original.
+  //
+  // Isso evita a necessidade de criar um novo objeto preenchendo todos
+  // os atributos manualmente sempre que apenas uma configuração precisar
+  // ser modificada.
   AppSettings copyWith({
+
+    // Novo estado das notificações (opcional).
     bool? notificationsEnabled,
+
+    // Novo estado do lembrete de água (opcional).
     bool? waterReminderEnabled,
+
+    // Novo estado do resumo diário (opcional).
     bool? dailySummaryEnabled,
+
+    // Novo horário do café da manhã (opcional).
     String? breakfastTime,
+
+    // Novo horário do almoço (opcional).
     String? lunchTime,
+
+    // Novo horário do lanche (opcional).
     String? snackTime,
+
+    // Novo horário do jantar (opcional).
     String? dinnerTime,
   }) {
+
+    // Retorna uma nova instância da classe AppSettings.
     return AppSettings(
+
+      // Mantém o mesmo identificador da configuração.
       id: this.id,
-      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
-      waterReminderEnabled: waterReminderEnabled ?? this.waterReminderEnabled,
-      dailySummaryEnabled: dailySummaryEnabled ?? this.dailySummaryEnabled,
+
+      // Caso um novo valor seja informado para as notificações,
+      // ele será utilizado. Caso contrário, mantém o valor atual.
+      notificationsEnabled:
+          notificationsEnabled ?? this.notificationsEnabled,
+
+      // Atualiza o lembrete de água apenas se um novo valor for informado.
+      // Caso contrário, preserva o valor existente.
+      waterReminderEnabled:
+          waterReminderEnabled ?? this.waterReminderEnabled,
+
+      // Atualiza a configuração do resumo diário.
+      // Se nenhum valor for passado, mantém a configuração atual.
+      dailySummaryEnabled:
+          dailySummaryEnabled ?? this.dailySummaryEnabled,
+
+      // Atualiza o horário do café da manhã, se necessário.
       breakfastTime: breakfastTime ?? this.breakfastTime,
+
+      // Atualiza o horário do almoço, se necessário.
       lunchTime: lunchTime ?? this.lunchTime,
+
+      // Atualiza o horário do lanche, se necessário.
       snackTime: snackTime ?? this.snackTime,
+
+      // Atualiza o horário do jantar, se necessário.
       dinnerTime: dinnerTime ?? this.dinnerTime,
     );
   }
