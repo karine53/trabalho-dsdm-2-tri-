@@ -1,40 +1,18 @@
 // Classe que representa uma refeição cadastrada no aplicativo.
 class Refeicao {
 
-  //da um id pra refeiçao(pode ser nulo)
+
   final int? id;
-
-  // Nome da refeição ou alimento.
-  final String nome;
-
-  // Descrição opcional da refeição.
+  final String nome; 
   final String? descricao;
-
-  // Tipo da refeição (Ex.: Café da Manhã, Almoço, Lanche, Jantar ou Ceia).
   final String? tipo;
-
-  // Categoria nutricional da refeição
   final String? categoria;
-
-  // Quantidade de calorias da refeição, nao pode ser nulo
   final double calorias;
-
-  // Quantidade de carboidratos (em gramas).
   final double carbs;
-
-  // Quantidade de proteínas (em gramas).
   final double proteina;
-
-  // Quantidade de gorduras (em gramas).
   final double gordura;
-
-  // Quantidade de água consumida (em litros).
   final double agua;
-
-  // Data da refeição no formato yyyy-MM-dd.
   final String data;
-
-  // Horário da refeição no formato HH:mm.
   final String? horario;
 
   // Construtor da classe.

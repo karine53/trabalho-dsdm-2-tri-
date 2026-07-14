@@ -4,26 +4,14 @@ class AppSettings {
   // Identificador das configurações no banco de dados.
   // Como existe apenas um conjunto de configurações, o valor padrão é 1.
   final int? id;
+//adicionar horario para configuraçoes
 
-  // Define se as notificações do aplicativo estão ativadas.
   bool notificationsEnabled;
-
-  // Define se os lembretes para beber água estão ativados.
   bool waterReminderEnabled;
-
-  // Define se o resumo diário das refeições será enviado.
   bool dailySummaryEnabled;
-
-  // Horário configurado para o café da manhã.
   String breakfastTime;
-
-  // Horário configurado para o almoço.
   String lunchTime;
-
-  // Horário configurado para o lanche.
   String snackTime;
-
-  // Horário configurado para o jantar.
   String dinnerTime;
 
   // Construtor da classe com valores padrão.
