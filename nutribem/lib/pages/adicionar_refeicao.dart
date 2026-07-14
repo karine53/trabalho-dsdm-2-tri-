@@ -6,6 +6,8 @@ import '../models/refeicao.dart';
 /// [AdicionarRefeicaoPage] atualizada para permitir o registro flexível.
 /// O usuário agora pode registrar apenas água, apenas alimento, ou ambos simultaneamente.
 class AdicionarRefeicaoPage extends StatefulWidget {
+  //armazena a refeiçao que sera editada
+  //se for nulo significa que o usuario esta cadastrando uma nova refeiçao 
   final Refeicao? refeicaoParaEditar;
 
   const AdicionarRefeicaoPage({

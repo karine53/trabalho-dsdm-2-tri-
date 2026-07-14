@@ -120,7 +120,7 @@ class NotificationService {
     }
   }
 
-  /// AGENDAMENTO DE NOTIFICAÇÃO (O CORAÇÃO DO SISTEMA)
+  /// AGENDAMENTO DE NOTIFICAÇÃO
   /// Agenda um lembrete para um horário específico que se repete diariamente.
   static Future<void> agendarNotificacao({
     required int id,
