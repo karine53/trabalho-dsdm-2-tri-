@@ -16,12 +16,10 @@ import 'services/notification_service.dart';
 /// O método 'main' é onde tudo começa. Usamos 'async' porque a inicialização
 /// de bancos de dados e serviços de notificação leva tempo (são operações assíncronas).
 void main() async {
-  // 1. Garante que o Flutter esteja pronto para interagir com o código nativo (Android/iOS)
-  // antes de tentarmos inicializar o banco de dados ou notificações.
-  WidgetsFlutterBinding.ensureInitialized();
+  
+  WidgetsFlutterBinding.ensureInitialized(); //garante que o flutter esteja totalmente pronto antes da integraçao 
 
-  // 2. INICIALIZAÇÃO DO BANCO DE DADOS (SQFLITE)
-  // O SQFLITE funciona de forma diferente dependendo da plataforma.
+  //adaptaçao do sqlite para diferentes ambientes de de execuçao 
   if (kIsWeb) {
     // Se estiver no navegador, usa a implementação Web.
     databaseFactory = databaseFactoryFfiWeb;
@@ -31,12 +29,10 @@ void main() async {
     databaseFactory = databaseFactoryFfi;
   }
   // No Android/iOS, o SQFLITE já funciona nativamente, então não precisa de if extra.
-
-  // 3. INTERNACIONALIZAÇÃO
-  // Configura as datas para o padrão brasileiro (ex: "segunda-feira" em vez de "Monday").
+  // Configura as datas para o padrão brasileiro 
   await initializeDateFormatting('pt_BR', null);
 
-  // 4. SERVIÇO DE NOTIFICAÇÕES
+
   // Só inicializamos se NÃO for Web, pois o pacote usado não suporta navegadores.
   if (!kIsWeb) {
     try {
@@ -46,11 +42,10 @@ void main() async {
     }
   }
 
-  // 5. INICIA A INTERFACE DO USUÁRIO
+  
   runApp(const NutriBemApp());
 }
 
-/// CLASSE PRINCIPAL DO APP
 /// Define o tema visual, as cores e as configurações de idioma globais.
 class NutriBemApp extends StatelessWidget {
   const NutriBemApp({super.key});
@@ -82,7 +77,6 @@ class NutriBemApp extends StatelessWidget {
   }
 }
 
-/// NAVEGAÇÃO PRINCIPAL (BOTTOM NAVIGATION BAR)
 /// Esta classe gerencia a troca entre as 4 abas principais do app.
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -92,10 +86,10 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  // Controla qual aba está selecionada no momento.
-  int _indiceSelecionado = 0;
+  
+  int _indiceSelecionado = 0; //controla se a aba esta nativa 
 
-  // Retorna o Widget (página) correspondente ao índice selecionado.
+  // Retorna o Widget (página) correspondente ao index 
   Widget _obterPagina(int index) {
     switch (index) {
       case 0: return const HomePage();       // Resumo do dia e metas.

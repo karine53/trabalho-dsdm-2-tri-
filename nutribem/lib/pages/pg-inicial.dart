@@ -5,7 +5,6 @@ import '../models/refeicao.dart';
 import '../models/resumo_nutricional.dart';
 import '../pages/adicionar_refeicao.dart';
 
-/// PÁGINA HOME (ESTADO INICIAL DO APP)
 /// O 'StatefulWidget' é usado porque esta tela precisa se redesenhar 
 /// sempre que os dados mudam (ex: quando você adiciona uma refeição).
 class HomePage extends StatefulWidget {

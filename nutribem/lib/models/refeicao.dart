@@ -3,7 +3,7 @@ class Refeicao {
 
 
   final int? id;
-  final String nome; 
+  final String nome;
   final String? descricao;
   final String? tipo;
   final String? categoria;
