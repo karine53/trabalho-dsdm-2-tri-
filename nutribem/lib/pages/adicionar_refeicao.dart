@@ -105,7 +105,7 @@ class _AdicionarRefeicaoPageState extends State<AdicionarRefeicaoPage> {
   }
 
   @override
-  void dispose() { //limpeza da memoria 
+  void dispose() {
     _nomeController.dispose();
     _quantidadeController.dispose();
     _caloriasController.dispose();
@@ -182,7 +182,7 @@ class _AdicionarRefeicaoPageState extends State<AdicionarRefeicaoPage> {
         descricao: _quantidadeController.text.trim().isEmpty ? null : _quantidadeController.text.trim(),
         tipo: _tipoSelecionado,
         categoria: _categoriaSelecionada,
-        calorias: double.tryParse(_caloriasController.text.replaceAll(',', '.')) ?? 0, //transforma para double e usa a virgula 
+        calorias: double.tryParse(_caloriasController.text.replaceAll(',', '.')) ?? 0,
         carbs: double.tryParse(_carbsController.text.replaceAll(',', '.')) ?? 0,
         proteina: double.tryParse(_proteinaController.text.replaceAll(',', '.')) ?? 0,
         gordura: double.tryParse(_gorduraController.text.replaceAll(',', '.')) ?? 0,
@@ -202,7 +202,7 @@ class _AdicionarRefeicaoPageState extends State<AdicionarRefeicaoPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar( // mensagens que aparecem rapidas 
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao salvar: $e'), backgroundColor: Colors.red),
         );
       }

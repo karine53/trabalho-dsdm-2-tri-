@@ -75,7 +75,7 @@ class _HomePageState extends State<HomePage> {
       initialDate: _dataSelecionada,
       firstDate: DateTime(2024),//a primeira data que o usuario pode selecionar
       lastDate: DateTime.now(), // Não permite selecionar datas futuras.
-      builder: (context, child) => Theme( //personaliza o tema para combinar com as corres do app
+      builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: const ColorScheme.light(primary: Color(0xFF1B5E20)),
         ),
@@ -166,7 +166,7 @@ class _HomePageState extends State<HomePage> {
   double get _totalAgua     => _resumo?.totalAgua     ?? 0;
   int    get _totalRefeicoes => _refeicoes.length;
   // Calcula a pontuação baseada na meta de calorias (máximo 100%).
-  double get _pontuacao => ((_totalCalorias / _metaCalorias) * 100).clamp(0, 100); //limita o valor
+  double get _pontuacao => ((_totalCalorias / _metaCalorias) * 100).clamp(0, 100);
 
   /// MÉTODO BUILD: Constrói a interface visual da tela.
   @override
@@ -284,7 +284,7 @@ class _HomePageState extends State<HomePage> {
   // --- WIDGETS DE RESUMO (CARD PRINCIPAL) ---
   Widget _buildResumoNutricional() {
     // Calcula o valor da barra de progresso (de 0.0 a 1.0).
-    final prog = (_totalCalorias / _metaCalorias).clamp(0.0, 1.0); //.clamp faz com que nunca passe do intervalo definido 
+    final prog = (_totalCalorias / _metaCalorias).clamp(0.0, 1.0);
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
