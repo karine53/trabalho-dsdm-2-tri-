@@ -84,7 +84,7 @@ class _EstatisticasPageState extends State<EstatisticasPage> {
     }
   }
 
-  // recev=be uma lista de objetos refeicao
+  // recebe uma lista de objetos refeicao
   void _processarEstatisticas(List<Refeicao> refeicoes) {
     _totalRefeicoesSemana = refeicoes.length; // total de refeiçoes
     /// .length retorna o tamanho da lista

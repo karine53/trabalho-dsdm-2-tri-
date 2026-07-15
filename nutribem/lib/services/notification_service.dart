@@ -6,29 +6,22 @@ import 'package:permission_handler/permission_handler.dart';
 import '../models/configuraçoes.dart';
 import 'dart:io' show Platform;
 
-/// CLASSE DE SERVIÇO DE NOTIFICAÇÕES
-/// Centraliza toda a lógica de permissões, agendamento e exibição de alertas.
+
 class NotificationService {
-  // Instância única do plugin de notificações locais.
+  // instancia principal para integrar com o sistema de notificaçoes local do dispositivo 
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
-  /// INICIALIZAÇÃO DO SERVIÇO
   /// Deve ser chamado no main.dart antes do runApp.
   static Future<void> init() async {
     try {
-      // 1. Inicializa o banco de dados de fusos horários (Timezones).
+//detecta o fuso horario local do dispositivo 
       tz_data.initializeTimeZones();
-      
-      // 2. Detecta o fuso horário local do dispositivo (ex: America/Sao_Paulo).
       final timezone = await FlutterTimezone.getLocalTimezone();
-      
-      // 3. Define esse fuso como o padrão para os cálculos de agendamento.
-      tz.setLocalLocation(tz.getLocation(timezone));
-
-      // Configuração específica para o Android (define o ícone que aparecerá na barra de status).
+      tz.setLocalLocation(tz.getLocation(timezone)); //garante que o horario programado seja o teu msm 
       const AndroidInitializationSettings androidSettings =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
+          AndroidInitializationSettings('@mipmap/ic_launcher');//comando interno do android que diz va ate essa paste e veja esse arquivo
+          //define o icone de notificaçao na barra de status 
 
       const InitializationSettings settings = InitializationSettings(
         android: androidSettings,
@@ -47,8 +40,8 @@ class NotificationService {
       if (Platform.isAndroid) {
         final androidPlugin = _notificationsPlugin
             .resolvePlatformSpecificImplementation<
-                AndroidFlutterLocalNotificationsPlugin>();
-        
+                AndroidFlutterLocalNotificationsPlugin>(); //serve para acessar as implementaçoes especificas do android 
+        //permite que o usuario controle as configuraçoes de son 
         await androidPlugin?.createNotificationChannel(
           const AndroidNotificationChannel(
             'nutribem_lembretes',      // ID único do canal.
@@ -76,7 +69,7 @@ class NotificationService {
       if (Platform.isAndroid) {
         if (await Permission.scheduleExactAlarm.isDenied) {
           print("Solicitando permissão de alarme exato...");
-          await Permission.scheduleExactAlarm.request();
+          await Permission.scheduleExactAlarm.request(); //para o android 12+
         }
       }
 
@@ -120,7 +113,7 @@ class NotificationService {
     }
   }
 
-  /// AGENDAMENTO DE NOTIFICAÇÃO (O CORAÇÃO DO SISTEMA)
+  /// AGENDAMENTO DE NOTIFICAÇÃO
   /// Agenda um lembrete para um horário específico que se repete diariamente.
   static Future<void> agendarNotificacao({
     required int id,
@@ -139,7 +132,7 @@ class NotificationService {
       }
 
       // Agenda a notificação usando fusos horários (Zoned Schedule).
-      await _notificationsPlugin.zonedSchedule(
+      await _notificationsPlugin.zonedSchedule( //serve para agendar notificaçoes que se repetem 
         id,
         titulo,
         corpo,
@@ -155,11 +148,11 @@ class NotificationService {
           ),
         ),
         uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-        // AndroidScheduleMode.exactAllowWhileIdle: Garante que toque mesmo em modo economia.
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        // Repete todos os dias no mesmo horário.
-        matchDateTimeComponents: DateTimeComponents.time,
+            UILocalNotificationDateInterpretation.absoluteTime, //usa o exato horario que foi passado
+      
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, //executa o alarme mesmo com o modo de suspensao no cllr 
+      
+        matchDateTimeComponents: DateTimeComponents.time,//repete o alarme todos os dias no mesmo horario definido 
       );
       print("Agendado: $titulo para $hora:$minuto");
     } catch (e) {
@@ -233,7 +226,7 @@ class NotificationService {
         id: 4,
         titulo: '🍽 Jantar',
         corpo: 'Está na hora do jantar!',
-        hora: int.parse(settings.dinnerTime.split(':')[0]),
+        hora: int.parse(settings.dinnerTime.split(':')[0]),// o split corta em pedaços tipo hora e minutos 
         minuto: int.parse(settings.dinnerTime.split(':')[1]),
       );
 
@@ -256,7 +249,7 @@ class NotificationService {
   /// Remove todos os lembretes do sistema.
   static Future<void> cancelarNotificacoes() async {
     try {
-      await _notificationsPlugin.cancelAll();
+      await _notificationsPlugin.cancelAll(); //remove todas as  notificaçoes pendentes 
       print("Todas as notificações canceladas.");
     } catch (e) {
       print("Erro ao cancelar notificações: $e");
