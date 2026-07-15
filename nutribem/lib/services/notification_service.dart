@@ -48,7 +48,7 @@ class NotificationService {
             'Lembretes NutriBem',      // Nome visível nas configurações do Android.
             description: 'Notificações de refeições e água',
             importance: Importance.max, // Define que a notificação deve fazer barulho/aparecer no topo.
-            enableVibration: true,
+            enableVibration: true, // garante a vibraçao 
           ),
         );
       }
