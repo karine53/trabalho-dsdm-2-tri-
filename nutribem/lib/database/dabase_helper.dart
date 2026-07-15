@@ -32,6 +32,7 @@ class DatabaseHelper {
   // Variável que vai guardar a conexão aberta com o banco.
   // Começa como null (ainda não foi aberta) e é do tipo Database?
   // (a "?" indica que pode ser nula).
+  //quer dizer que o atributo ou método pertence á classe e nao a um objeto criado dessa classe
   static Database? _database;
 
   // Construtor privado (o "_" no nome impede que outras partes do

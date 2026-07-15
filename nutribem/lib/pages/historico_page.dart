@@ -36,13 +36,14 @@ class _HistoricoPageState extends State<HistoricoPage> {
 
   // Atalho pra instância única do banco de dados (evita repetir
   // "DatabaseHelper.instance" toda vez).
+  //aqui a tela consegue consultar, adicionar ou remover informacoes sem precisar criar outra conexao
   final DatabaseHelper _db = DatabaseHelper.instance;
 
   // Controller (controlador) do campo de texto de pesquisa. Ele é quem
   // guarda o que o usuário está digitando e permite "escutar" mudanças.
   final TextEditingController _pesquisaController = TextEditingController();
 
-  // Qual filtro de período está selecionado no momento. Começa em "hoje".
+  // Qual filtro de período está selecionado no momento. Começa em "hoje", mas pode ser ontem semana mes
   _FiltroPeriodo _filtroSelecionado = _FiltroPeriodo.hoje;
 
   // Texto atualmente digitado na busca (guardado separado do controller
@@ -66,15 +67,17 @@ class _HistoricoPageState extends State<HistoricoPage> {
 
     // Registra uma função pra ser chamada toda vez que o texto de
     // pesquisa mudar (usuário digitando).
+    //é um controle da pesquisa, sempre que o usuario digita ou apaga o metodo _onpesquisaalterada é chamadp
     _pesquisaController.addListener(_onPesquisaAlterada);
   }
 
   // Chamado automaticamente quando essa tela é destruída (usuário saiu
   // dela). Serve pra "limpar a bagunça" e evitar vazamento de memória.
   @override
-  void dispose() {
+  void dispose() {//o dispose é chamado quando a tela é fechada, serve pra liberar recursos
+  //q n serao mais usados
     // Remove a "escuta" de mudanças de texto antes de destruir o controller.
-    _pesquisaController.removeListener(_onPesquisaAlterada);
+    _pesquisaController.removeListener(_onPesquisaAlterada);//remove o listener do campo de pesquisa
 
     // Libera os recursos internos do controller.
     _pesquisaController.dispose();
@@ -86,7 +89,7 @@ class _HistoricoPageState extends State<HistoricoPage> {
   void _onPesquisaAlterada() {
     // Atualiza o termo de pesquisa guardado (removendo espaços extras
     // no início/fim com trim()) e manda a tela se redesenhar.
-    setState(() => _termoPesquisa = _pesquisaController.text.trim());
+    setState(() => _termoPesquisa = _pesquisaController.text.trim());//trim remove espaço no inicio e fim do textp
 
     // Busca de novo no banco já considerando o novo termo digitado.
     _carregarDados();
@@ -95,7 +98,7 @@ class _HistoricoPageState extends State<HistoricoPage> {
   // ── Calcula intervalo [inicio, fim] (formato yyyy-MM-dd) para o filtro ──────
   // Devolve uma "tupla" (par de valores) com a data de início e fim do
   // período selecionado, já formatadas como String no padrão do banco.
-  (String, String) _intervaloDoFiltro() {
+  (String, String) _intervaloDoFiltro() {//quer dizer q o intervalo desse filtro é da datainicial ate a final
 
     // Pega a data/hora atual...
     final hoje = DateTime.now();
@@ -105,7 +108,8 @@ class _HistoricoPageState extends State<HistoricoPage> {
     final hojeData = DateTime(hoje.year, hoje.month, hoje.day);
 
     // Decide o intervalo de acordo com qual filtro está selecionado.
-    switch (_filtroSelecionado) {
+    switch (_filtroSelecionado) {//o switch é varios if e else e ele verifica o valor de _filtro selecionado
+    //que pode ser hoje, ontem semana e mes
 
       case _FiltroPeriodo.hoje:
         // Início e fim são o mesmo dia: hoje.

@@ -4,19 +4,23 @@ import '../database/dabase_helper.dart';
 import '../models/refeicao.dart';
 
 /// [AdicionarRefeicaoPage] atualizada para permitir o registro flexível.
-/// O usuário agora pode registrar apenas água, apenas alimento, ou ambos simultaneamente.
 class AdicionarRefeicaoPage extends StatefulWidget {
+  ///só se define uma vez(variavel
   final Refeicao? refeicaoParaEditar;
-
+//construtor da classe
   const AdicionarRefeicaoPage({
+    //o super.key passa a chave pra classe pai StatefulWidget
     super.key,
+    ///o valor recebiudo naquele construtor é colocado nessa variavel
     this.refeicaoParaEditar,
   });
 
   @override
+  ///é tudo oq pode mudar na tela adicionarrefeicaopage, e o estado da tela será um objeto da classe _adicionarefeicaopagestate
+  ///
   State<AdicionarRefeicaoPage> createState() => _AdicionarRefeicaoPageState();
 }
-
+///_adidionaerefeicaopagestate guarda todas as informacoes e controla o comportamento da tela
 class _AdicionarRefeicaoPageState extends State<AdicionarRefeicaoPage> {
   // ── CONTROLADORES ──────────────────────────────────────────────────────────
   final TextEditingController _nomeController = TextEditingController();
@@ -27,7 +31,7 @@ class _AdicionarRefeicaoPageState extends State<AdicionarRefeicaoPage> {
   final TextEditingController _gorduraController = TextEditingController();
   final TextEditingController _aguaController = TextEditingController();
 
-  // ── ESTADO ─────────────────────────────────────────────────────────────────
+  // ── ESTADO ────────────────────────────────────────────────────────────────
   String _categoriaSelecionada = 'Proteína';
   String _tipoSelecionado = 'Almoço';
   DateTime _dataSelecionada = DateTime.now();
@@ -50,16 +54,20 @@ class _AdicionarRefeicaoPageState extends State<AdicionarRefeicaoPage> {
   ];
 
   @override
+  //tem alguma coisa q preciso fazer antes de mostrar a tela
   void initState() {
+    //flutter faça primeiro toda a inicialização da tela
     super.initState();
     _carregarDadosParaEdicao();
   }
-
+//só serve pra quando o usuario quer editar
   void _carregarDadosParaEdicao() {
+    //esse if pergunta se existe uma refeição pra editar, se sim entra no if
     if (widget.refeicaoParaEditar != null) {
       final refeicao = widget.refeicaoParaEditar!;
       _editando = true;
-
+///textfield só aceita string
+///se o valor da esquerda for nulo usa o da direita
       _nomeController.text = refeicao.nome;
       _quantidadeController.text = refeicao.descricao ?? '';
       _caloriasController.text = refeicao.calorias.toString();
